@@ -22,11 +22,12 @@
 \usepackage{caption}
 \usepackage{multirow}
 \usepackage{rotating}
+\usepackage{soul}
  
 \usepackage{palatino}
 
 \usepackage{graphicx}
-\graphicspath{{figuren/}} 
+\graphicspath{{figures/}} 
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 
@@ -113,19 +114,18 @@
 \clearpage
 
 \section{Problem}
+\hl{(1 page)}
+A Field Programmable Gate Array (FPGA) is an integrated circuit made up of a grid of programmable functional blocks embedded in a programmable interconnection network. An FPGA can be programmed to implement any arbitrary logic function in the same way as Application Specific Integrated Circuits (ASICs), however the functionality of an FPGA is not fixed during the production process. The functionality can be changed by writing a different configuration to the configuration memory. This flexibility leads to a substantial reduction of the economic risk of developing hardware accelerators for FPGAs. It also explains the rise in the popularity of the FPGA \cite{}. \hl{we need a reference here} Unfortunately the flexibility of the FPGA comes at a price.  Each time the application developer wants to test his design. The design has to be compiled to a FPGA configuration and this is a complex process, that consist of multiple steps. In each step  multiple NP hard problems. 
 
 Een FPGA is een ge\"integreerde schakeling (IC) die bestaat uit een rooster van programmeerbare logische blokken ingebed in een programmeerbaar interconnectienetwerk. Net als bij toepassingsspecifieke IC's (ASIC's) kan op een FPGA een arbitraire logische schakeling ge\"implementeerd worden. In ASIC's wordt de schakeling vast in de chip gebakken. De logische schakeling die een FPGA implementeert daarentegen, wordt bepaald door de inhoud van zijn configuratiegeheugen. Het grote voordeel van FPGA's is dat de logische schakeling eenvoudig kan veranderd worden door het configuratiegeheugen te herschrijven. Deze flexibiliteit zorgt voor een sterk verlaagd economisch risico (tegenover ASIC's) en daardoor groeit de populariteit van FPGA's. Jammergenoeg komt de programeerbaarheid van FPGA's met een prijs in de vorm van een grotere chipoppervlakte en een lagere kloksnelheid in vergelijking met ASIC's.
 
-Tot op heden wordt de programeerbaarheid van FPGA's op een zeer statische manier gebruikt. Het configuratiegeheugen wordt enkel bij het opstarten van het systeem geladen en blijft daarna vast. Vele toepassingen vertonen echter een dynamisch gedrag dat in de loop van de tijd verandert naargelang parameterwaarden wijzigen. Zo zal bijvoorbeeld in een netwerkintrusiedetectiesysteem (zie verder) regelmatig de set van te controleren regels aangepast worden. Het is dan voordelig om het ge\"implementeerde circuit voor elke nieuwe set van regels te specialiseren zodat de effici\"entie in de implementatie verbeterd wordt (en dichter bij die van een ASIC ligt). Dit is mogelijk in een FPGA door de configuratie aan te passen aan de noden van het moment. Dit heet \mbox{{\em dynamische herconfiguratie}}. Het ontwikkelen van een dergelijk systeem is heel complex en er zijn weinig automatische methoden voorhanden om de ontwikkeling te vereenvoudigen. Op dit moment ondersteunen de grootste FPGA-fabrikanten enkel dynamische herconfiguratie met een zeer grote granulariteit~\cite{XilinxRTRFlow1,XilinxRTRFlow2,stratix5}. Hierdoor gaan veel mogelijkheden tot herconfiguratie verloren. Daarom werd in de onderzoeksgroep CSL/HES aan de UGent een automatische methode ontwikkeld die herconfiguratie met een fijne granulariteit mogelijk maakt~\cite{reconf2008-kbruneel,fpl2008-kbruneel,phdkarel}. Deze methode laat toe om de FPGA-configuratie te specialiseren voor elke waarde van de veranderende parameters. 
-
-Op het moment van de eerste aanvraag, liet deze nieuwe methode enkel toe om de {\em functie} van de logische blokken van de FPGA dynamisch aan te passen. Alle routering op de FPGA bleven dus vast. Voor sommige toepassingen leidde deze methode al tot een reductie van de FPGA-oppervlakte met een factor 4. Experimenten in mijn thesis~\cite{mthesiselias} hebben aangetoond dat het herconfigureren van de {\em routering} eveneens tot een verdere reductie van de FPGA-oppervlakte kan leiden, voor bijvoorbeeld clos-netwerken (zie verder) kan een oppervlaktereductie van meer dan een factor 9 verkregen worden, als het interconnectienetwerk van de FPGA ook geherconfigureerd wordt. Op het moment van de eerste aanvraag zijn er geen automatische methoden beschikbaar die de herconfiguratie van de routering mogelijk maken. %Herconfigureerbare routering kon hierdoor enkel verkregen worden door arbeidsintensief ontwerp op laag niveau.
-
-Samengevat: \emph{Dynamische FPGA-herconfiguratie biedt vele voordelen. Op dit moment kan enkel de functionaliteit, maar nog niet het interconnectienetwerk van de FPGA gespecialiseerd worden op een automatische manier. Dit leidt tot veel manueel werk op het architecturaal niveau en dus heel dure en niet-herbruikbare implementaties.} 
+Summary: \emph{Dynamische FPGA-herconfiguratie biedt vele voordelen. Op dit moment kan enkel de functionaliteit, maar nog niet het interconnectienetwerk van de FPGA gespecialiseerd worden op een automatische manier. Dit leidt tot veel manueel werk op het architecturaal niveau en dus heel dure en niet-herbruikbare implementaties.} 
 
 \newpage
 
 \section{Goal}
-What do you want to know, prove, demonstrate, analyse, test, investigate or examine? List your project aims in a logical sequence.
+\hl{What do you want to know, prove, demonstrate, analyse, test, investigate or examine? List your project aims in a logical sequence.}
+\hl{(1 page)}
 
 \emph{Het doel is het uitbreiden van de huidige automatische methode voor dynamische circuitspecialisatie met herconfiguratie van het routeringsnetwerk, zodat FPGA's nog effici\"enter gebruikt kunnen worden. Meer specifiek zal ik mij concentreren op het ontwikkelen van nieuwe plaastings- en routeringsmethoden die dit mogelijk maken.}
 
@@ -140,27 +140,28 @@ In de totale methodologie kunnen op dit moment enkel TCON's tussen logische blok
 \newpage
 
 \section{Background}
+\hl{(4 pages)}
 What is already known or unknown? Set the scene.
 
 \subsection{Situering}
 
 FPGA's worden steeds vaker gebruikt als componenten in digitale systemen. Zoals in de probleemstelling is vermeld, is de populariteit van FPGA's te danken aan de flexibiliteit die de (her)configureerbaarheid met zich meebrengt. Op een FPGA kan een willekeurige digitale schakeling ge\"implementeerd worden. De enige beperking is de grootte van de FPGA. Om dit mogelijk te maken bevat de FPGA een rooster van logische blokken. Elk logisch blok bevat op zijn beurt enkele Look-Up Tables (LUT's). Elke LUT kan om het even welke Boolese functie van zijn ingangen kan implementeren. Dit is mogelijk door de waarheidstabel van deze functie in het geheugen van de LUT te schrijven. De logische blokken zijn ingebed in een interconnectienetwerk dat volledig configureerbaar is. Dit interconnectienetwerk kunnen we configureren door bepaalde waarden te schrijven in de geheugencellen van de schakelaars. De geheugens van zowel de LUT's als de interconnecties vormen samen het configuratiegeheugen van de FPGA. 
 
-\subsubsection{Klassiek FPGA-ontwerp}
+\subsubsection{Conventional FPGA CAD tools}
 In klassiek FPGA-ontwerp wordt de FPGA alleen geconfigureerd bij het opstarten of bij updates. Het configuratiegeheugen wordt dan geschreven aan de hand van een configuratiebitstroom. Het genereren van deze bitstroom is een complexe taak. Daarvoor werden geautomatiseerde toolflows ontwikkeld. Deze toolfows zetten een beschrijving van het systeem op RT-niveau om naar een configuratiebitstroom voor de FPGA. Dit gebeurt aan de hand van de volgende stappen (een overzicht is weergegeven in het schema links in Figuur \ref{toolflows}).
 
-\paragraph{De synthese}
+\paragraph{Synthesis}
 De ontwerper beschrijft zijn digitaal systeem aan de hand van een hardwarebeschrijvingstaal (Hardware Description Language). De synthesestap vertaalt de beschrijving naar een netlijst van logische poorten, in- en uitgangen en netten.
 
-\paragraph{Technologie-afbeelding} 
+\paragraph{Technology Mapping} 
 De technologie-afbeelder beeldt de netlijst met poorten en netten af op een circuit met functionele blokken die aanwezig zijn op de doel-FPGA en netten die deze functionele blokken verbinden.
 
-\paragraph{De plaatsing}
+\paragraph{Placement}
 De plaatser kiest een logisch blok op de FPGA voor elk functioneel blok in het circuit. De plaatser plaatst de blokken rekening houdend met een optimalisatiecriterium. Mogelijke optimalisatiecriteria zijn minimale draadlengte, routeerbaarheid en minimale vertraging. Deze optimalisatiecriteria zijn niet onafhankelijk van elkaar. In dit project wordt een draadlengte-gedreven plaatser beschouwd. Draadlengte-gedreven plaatsers proberen de blokken zo te plaatsen dat de routeerder een minimum aan routeringsmiddelen nodig heeft om de netten tussen de blokken te routeren.
 
 Tijdens de plaatsing moet het plaatsingsalgoritme de kwaliteit van een plaatsing op elk moment kunnen inschatten. Als we optimaliseren voor minimale draadlengte, komt dit erop neer dat de plaatser moet voorspellen hoeveel routeringsmiddelen de routeerder zal nodig hebben. Hiervoor beschikt hij enkel over de posities van de functionele blokken. Om de routeringsmiddelen te schatten, zijn al vele kostenfuncties voorgesteld~\cite{vprBVRJ, vprboek}. Hoe beter de geschatte routeringsmiddelen overeenkomen met de eigenlijke routeringsmiddelen hoe beter de plaatser zijn werk kan doen.
 
-\paragraph{De routering} Na de plaatsingsstap is de plaats van de logische blokken bekend en is er dus voldoende informatie beschikbaar voor het routeren van de netten in de op de FPGA aanwezige interconnectienetwerk. Het routeren van \'e\'en net is te herleiden tot het Steiner-boomprobleem (een bekend NP-compleet probleem dat door de routeerder opgelost wordt met een heuristiek).
+\paragraph{Routing} Na de plaatsingsstap is de plaats van de logische blokken bekend en is er dus voldoende informatie beschikbaar voor het routeren van de netten in de op de FPGA aanwezige interconnectienetwerk. Het routeren van \'e\'en net is te herleiden tot het Steiner-boomprobleem (een bekend NP-compleet probleem dat door de routeerder opgelost wordt met een heuristiek).
 
 Netten mogen geen routeringsmiddelen delen want dat zou een kortsluiting veroorzaken. De routeerder moet dus op zoek gaan naar disjuncte verzamelingen van routeringsmiddelen, voor elk net \'e\'en verzameling. De meeste conventionele routeerders voor FPGA~\cite{vprBVRJ, vprboek} doen dit aan de hand van het pathfinder-algoritme~\cite{pathfinder}. Dit is een iteratief algoritme waarbij de gerouteerde netten verschillende keren opgebroken en opnieuw gerouteerd worden. In de eerste iteratie houdt pathfinder weinig tot geen rekening met het overgebruik van routeringsmiddelen op bepaalde plaatsen (congestie). In de daaropvolgende iteraties verhoogt pathfinder geleidelijk de kost van routeringsmiddelen die overgebruikt worden tot er geen congestie meer is.
 
@@ -335,6 +336,7 @@ My research will be conducted at Ghent University in the research group Hardware
 \newpage
 
 \section{Timetable}\label{timetable}
+\hl{(1 page)}
 Indicate the timeframe for each broad stage considering literature surveys, data collection, production, modelling, review, analysis,
 testing, reporting, chapter and thesis writing, and thesis submission date.
 
