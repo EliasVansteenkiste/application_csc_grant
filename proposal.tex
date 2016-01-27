@@ -100,7 +100,7 @@
 \clearpage
 
 \section{Problem Definition}
-\hl{(1 page)}
+\hl{(1 page) test test}
 A Field Programmable Gate Array (FPGA) is an integrated circuit made up of a grid of programmable functional blocks embedded in a programmable interconnection network. An FPGA can be programmed to implement any arbitrary logic function in the same way as Application Specific Integrated Circuits (ASICs), however the functionality of an FPGA is not fixed during the production process. The functionality can be changed by writing a different configuration to the configuration memory. This flexibility leads to a substantial reduction of the economic risk of developing hardware accelerators for FPGAs. It also explains the rise in the popularity of the FPGA \cite{}. \hl{we need a reference here} Unfortunately the flexibility of the FPGA comes at a price.  Each time the application developer wants to test his design, the design has to be compiled to a FPGA configuration and this is a complex time consuming process. Unfortunately the designer typically needs to compile his application numerous times to test if the design meets the constraints of the application. 
 
 The compilation/translation of a high-level description of the application to a FPGA configuration is typically divided in several steps. In each step NP hard problems have to be solved and heuristics were and are being developed to try to approximate an optimal solution. The most time-consuming steps are the placement and routing steps. They are the last steps at the backend of the tool flow. These steps have to performed to obtain accurate timing information, which is needed to assess if the constraints are met. 
