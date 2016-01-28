@@ -100,19 +100,21 @@
 \clearpage
 
 \section{Problem Definition \hl{(1 page)}}
-A Field Programmable Gate Array (FPGA) is an integrated circuit made up of a grid of programmable functional blocks embedded in a programmable interconnection network. An FPGA can be programmed to implement any arbitrary logic function in the same way as Application Specific Integrated Circuits (ASICs), however the functionality of an FPGA is not fixed during the production process. The functionality can be changed by writing a different configuration to the configuration memory. This flexibility leads to a substantial reduction of the economic risk of developing hardware accelerators for FPGAs. It also explains the rise in the popularity of the FPGA. Unfortunately the flexibility of the FPGA comes at a price.  Each time the application developer wants to test his design, the design has to be compiled to a FPGA configuration and this is a complex time consuming process. Unfortunately the designer typically needs to compile his application numerous times to test if his/her design meets the constraints of the application. 
+A Field Programmable Gate Array (FPGA) is an integrated circuit made up of a grid of programmable functional blocks embedded in a programmable interconnection network. An FPGA can be programmed to implement any arbitrary logic function in the same way as Application Specific Integrated Circuits (ASICs), however the functionality of an FPGA is not fixed during the production process. The functionality can be changed by writing a different configuration to the configuration memory. This flexibility of FPGAs leads to a substantial reduction of the economic risk of developing hardware accelerators. It also explains the rise in the popularity of the FPGA. Unfortunately the flexibility of the FPGA comes at a price.  Each time the application developer wants to test his design, the design has to be compiled to a FPGA configuration and this is a complex and time consuming process. Unfortunately the designer typically needs to compile his application numerous times to test if his/her design meets the constraints of the application. 
 
 The main FPGA device manufacturers and the academic community have developed a chain of heuristics to solve the NP hard problems involved in the compilation.
 The compilation/translation of a high-level description of the application to a FPGA configuration is typically divided in several steps. In each step NP hard problems have to be solved and heuristics were and are being developed to try to approximate an optimal solution. The most time-consuming steps are the placement and routing steps. They are the last steps at the backend of the tool flow. These steps have to performed to obtain accurate timing information, which is needed to assess if the design meets the constraints. 
  
-Another trend is the increase in both the size of applications and the target devices. FPGA device and application sizes are still increasing following Moore's law~\cite{shannon2015technology}. Unfortunately the power of the FPGA CAD tools lag behind. The traditional CAD heuristics scale very badly in terms of application and device size, which translates to waiting times of hours up until days for compilation to finish \cite{murray2015timing}. 
-leading to growing gap in 
+Another trend is the increase in both the size of applications and the size of the target devices. FPGA device and application sizes are still increasing following Moore's law~\cite{shannon2015technology}. Unfortunately the power of the FPGA CAD tools lag behind. The traditional CAD heuristics scale very badly in terms of application and device size, which translates to waiting times of hours up until days for compilation to finish \cite{murray2015timing}. 
+\hl{The following piece of text is still needed?: leading to growing gap in }
 
-Since the introduction of high-level synthesis\cite{}, more and more engineers with a software background attempt to accelerate applications with an FPGA. They are used to gcc-like compilation times. Their design methodologies are adapted to these short compilation times. In order to fix bugs and measure performance the compilation is performed numerous times.
+Since the introduction of high-level synthesis\cite{}, more and more engineers with a software background attempt to accelerate applications with an FPGA. They are used to gcc-like compilation times. Their design methodologies are adapted to these short compilation times. In order to fix bugs and measure performance the compilation is performed numerous times. Hence, they cannot accept the long compilation times that are common in FPGA design.
 
-To overcome this problem, device manufacturers and academics developed multi-threaded version of the heuristic algorithms \cite{ludwin2011,gort2012,betz2013method,jain2014multi}, but unfortunately scalability issues still exists and large designs still need hours to be compiled. To further speed up compilation a straightforward path is to use hardware acceleration, but unfortunately the current multi-threaded algorithms for placement and routing are hard to adapt for the wide scale parallelisation used in hardware accelerators such as GPUs and FPGAs.
+To overcome this problem, device manufacturers and academics developed multi-threaded versions of the heuristic algorithms \cite{ludwin2011,gort2012,betz2013method,jain2014multi}, but unfortunately scalability issues still exist and large designs still need hours to be compiled. To further speed up compilation a straightforward path is to use hardware acceleration, but unfortunately the current multi-threaded algorithms for placement and routing are hard to adapt for the wide scale parallelisation used in hardware accelerators such as GPUs and FPGAs.
 
-Summary: \emph{Dynamische FPGA-herconfiguratie biedt vele voordelen. Op dit moment kan enkel de functionaliteit, maar nog niet het interconnectienetwerk van de FPGA gespecialiseerd worden op een automatische manier. Dit leidt tot veel manueel werk op het architecturaal niveau en dus heel dure en niet-herbruikbare implementaties.} 
+Summary: \emph{FPGA design compilation takes too much time to allow efficient design turnaround times. Hardware acceleration of the compilation process is needed but the current placement and routing algorithms are not very well suited for this.
+%Dynamische FPGA-herconfiguratie biedt vele voordelen. Op dit moment kan enkel de functionaliteit, maar nog niet het interconnectienetwerk van de FPGA gespecialiseerd worden op een automatische manier. Dit leidt tot veel manueel werk op het architecturaal niveau en dus heel dure en niet-herbruikbare implementaties.
+} 
 
 \newpage
 
@@ -120,7 +122,7 @@ Summary: \emph{Dynamische FPGA-herconfiguratie biedt vele voordelen. Op dit mome
 \hl{What do you want to know, prove, demonstrate, analyse, test, investigate or examine? List your project aims in a logical sequence.}
 
 
-\emph{Write a summary of the goal in one sentence}
+\emph{In this Ph.D.\ research proposal, our aim is to significantly reduce the FPGA design compilation time by efficiently parallelizing placement and routing algorithms. In a first phase, we will parallelize and improve the existing placement and routing algorithm implementations. For the routing problem, we envisage that the existing routing algorithms will not allow a significant enough efficiency increase. Therefore, in a second phase, we will investigate new routing algorithms that are much more susceptible to parallelization and are much more efficiently accelerated by hardware than the current implementations.}
 
 text
 text 
@@ -133,27 +135,28 @@ text
 \section{Background \hl{(4 pages)}}
 \hl{What is already known or unknown? Set the scene.}
 
-\subsection{Situering \hl{(1.5 pages)}}
+\subsection{Existing approaches \hl{(1.5 pages)}}
 
-FPGA's worden steeds vaker gebruikt als componenten in digitale systemen. Zoals in de probleemstelling is vermeld, is de populariteit van FPGA's te danken aan de flexibiliteit die de (her)configureerbaarheid met zich meebrengt. Op een FPGA kan een willekeurige digitale schakeling ge\"implementeerd worden. De enige beperking is de grootte van de FPGA. Om dit mogelijk te maken bevat de FPGA een rooster van logische blokken. Elk logisch blok bevat op zijn beurt enkele Look-Up Tables (LUT's). Elke LUT kan om het even welke Boolese functie van zijn ingangen kan implementeren. Dit is mogelijk door de waarheidstabel van deze functie in het geheugen van de LUT te schrijven. De logische blokken zijn ingebed in een interconnectienetwerk dat volledig configureerbaar is. Dit interconnectienetwerk kunnen we configureren door bepaalde waarden te schrijven in de geheugencellen van de schakelaars. De geheugens van zowel de LUT's als de interconnecties vormen samen het configuratiegeheugen van de FPGA. 
+\hl{Staat er geen overzicht vand e flow in het Engels in de aanvraag van Alexia? Moet wel veel korter om op 1,5 pagina te passen.}
+\hl{FPGA's worden steeds vaker gebruikt als componenten in digitale systemen. Zoals in de probleemstelling is vermeld, is de populariteit van FPGA's te danken aan de flexibiliteit die de (her)configureerbaarheid met zich meebrengt. Op een FPGA kan een willekeurige digitale schakeling ge\"implementeerd worden. De enige beperking is de grootte van de FPGA. Om dit mogelijk te maken bevat de FPGA een rooster van logische blokken. Elk logisch blok bevat op zijn beurt enkele Look-Up Tables (LUT's). Elke LUT kan om het even welke Boolese functie van zijn ingangen implementeren. Dit is mogelijk door de waarheidstabel van deze functie in het geheugen van de LUT te schrijven. De logische blokken zijn ingebed in een interconnectienetwerk dat volledig configureerbaar is. Dit interconnectienetwerk kunnen we configureren door bepaalde waarden te schrijven in de geheugencellen van de schakelaars. De geheugens van zowel de LUT's als de interconnecties vormen samen het configuratiegeheugen van de FPGA. }
 
 \subsubsection{Conventional FPGA CAD tools}
-In klassiek FPGA-ontwerp wordt de FPGA alleen geconfigureerd bij het opstarten of bij updates. Het configuratiegeheugen wordt dan geschreven aan de hand van een configuratiebitstroom. Het genereren van deze bitstroom is een complexe taak. Daarvoor werden geautomatiseerde toolflows ontwikkeld. Deze toolfows zetten een beschrijving van het systeem op RT-niveau om naar een configuratiebitstroom voor de FPGA. Dit gebeurt aan de hand van de volgende stappen (een overzicht is weergegeven in het schema links in Figuur \ref{toolflows}).
+\hl{In klassiek FPGA-ontwerp wordt de FPGA alleen geconfigureerd bij het opstarten of bij updates. Het configuratiegeheugen wordt dan geschreven aan de hand van een configuratiebitstroom. Het genereren van deze bitstroom is een complexe taak. Daarvoor werden geautomatiseerde toolflows ontwikkeld. Deze toolfows zetten een beschrijving van het systeem op RT-niveau om naar een configuratiebitstroom voor de FPGA. Dit gebeurt aan de hand van de volgende stappen (een overzicht is weergegeven in het schema links in Figuur \ref{toolflows}).}
 
 \paragraph{Synthesis}
-De ontwerper beschrijft zijn digitaal systeem aan de hand van een hardwarebeschrijvingstaal (Hardware Description Language). De synthesestap vertaalt de beschrijving naar een netlijst van logische poorten, in- en uitgangen en netten.
+\hl{De ontwerper beschrijft zijn digitaal systeem aan de hand van een hardwarebeschrijvingstaal (Hardware Description Language). De synthesestap vertaalt de beschrijving naar een netlijst van logische poorten, in- en uitgangen en netten.}
 
 \paragraph{Technology Mapping} 
-De technologie-afbeelder beeldt de netlijst met poorten en netten af op een circuit met functionele blokken die aanwezig zijn op de doel-FPGA en netten die deze functionele blokken verbinden.
+\hl{De technologie-afbeelder beeldt de netlijst met poorten en netten af op een circuit met functionele blokken die aanwezig zijn op de doel-FPGA en netten die deze functionele blokken verbinden.}
 
 \paragraph{Placement}
-De plaatser kiest een logisch blok op de FPGA voor elk functioneel blok in het circuit. De plaatser plaatst de blokken rekening houdend met een optimalisatiecriterium. Mogelijke optimalisatiecriteria zijn minimale draadlengte, routeerbaarheid en minimale vertraging. Deze optimalisatiecriteria zijn niet onafhankelijk van elkaar. In dit project wordt een draadlengte-gedreven plaatser beschouwd. Draadlengte-gedreven plaatsers proberen de blokken zo te plaatsen dat de routeerder een minimum aan routeringsmiddelen nodig heeft om de netten tussen de blokken te routeren.
+\hl{De plaatser kiest een logisch blok op de FPGA voor elk functioneel blok in het circuit. De plaatser plaatst de blokken rekening houdend met een optimalisatiecriterium. Mogelijke optimalisatiecriteria zijn minimale draadlengte, routeerbaarheid en minimale vertraging. Deze optimalisatiecriteria zijn niet onafhankelijk van elkaar. In dit project wordt een draadlengte-gedreven plaatser beschouwd. Draadlengte-gedreven plaatsers proberen de blokken zo te plaatsen dat de routeerder een minimum aan routeringsmiddelen nodig heeft om de netten tussen de blokken te routeren.
 
-Tijdens de plaatsing moet het plaatsingsalgoritme de kwaliteit van een plaatsing op elk moment kunnen inschatten. Als we optimaliseren voor minimale draadlengte, komt dit erop neer dat de plaatser moet voorspellen hoeveel routeringsmiddelen de routeerder zal nodig hebben. Hiervoor beschikt hij enkel over de posities van de functionele blokken. Om de routeringsmiddelen te schatten, zijn al vele kostenfuncties voorgesteld~\cite{vprBVRJ, vprboek}. Hoe beter de geschatte routeringsmiddelen overeenkomen met de eigenlijke routeringsmiddelen hoe beter de plaatser zijn werk kan doen.
+Tijdens de plaatsing moet het plaatsingsalgoritme de kwaliteit van een plaatsing op elk moment kunnen inschatten. Als we optimaliseren voor minimale draadlengte, komt dit erop neer dat de plaatser moet voorspellen hoeveel routeringsmiddelen de routeerder zal nodig hebben. Hiervoor beschikt hij enkel over de posities van de functionele blokken. Om de routeringsmiddelen te schatten, zijn al vele kostenfuncties voorgesteld~\cite{vprBVRJ, vprboek}. Hoe beter de geschatte routeringsmiddelen overeenkomen met de eigenlijke routeringsmiddelen hoe beter de plaatser zijn werk kan doen.}
 
-\paragraph{Routing} Na de plaatsingsstap is de plaats van de logische blokken bekend en is er dus voldoende informatie beschikbaar voor het routeren van de netten in de op de FPGA aanwezige interconnectienetwerk. Het routeren van \'e\'en net is te herleiden tot het Steiner-boomprobleem (een bekend NP-compleet probleem dat door de routeerder opgelost wordt met een heuristiek).
+\paragraph{Routing} \hm{Na de plaatsingsstap is de plaats van de logische blokken bekend en is er dus voldoende informatie beschikbaar voor het routeren van de netten in het op de FPGA aanwezige interconnectienetwerk. Het routeren van \'e\'en net is te herleiden tot het Steiner-boomprobleem (een bekend NP-compleet probleem dat door de routeerder opgelost wordt met een heuristiek).
 
-Netten mogen geen routeringsmiddelen delen want dat zou een kortsluiting veroorzaken. De routeerder moet dus op zoek gaan naar disjuncte verzamelingen van routeringsmiddelen, voor elk net \'e\'en verzameling. De meeste conventionele routeerders voor FPGA~\cite{vprBVRJ, vprboek} doen dit aan de hand van het pathfinder-algoritme~\cite{pathfinder}. Dit is een iteratief algoritme waarbij de gerouteerde netten verschillende keren opgebroken en opnieuw gerouteerd worden. In de eerste iteratie houdt pathfinder weinig tot geen rekening met het overgebruik van routeringsmiddelen op bepaalde plaatsen (congestie). In de daaropvolgende iteraties verhoogt pathfinder geleidelijk de kost van routeringsmiddelen die overgebruikt worden tot er geen congestie meer is.
+Netten mogen geen routeringsmiddelen delen want dat zou een kortsluiting veroorzaken. De routeerder moet dus op zoek gaan naar disjuncte verzamelingen van routeringsmiddelen, voor elk net \'e\'en verzameling. De meeste conventionele routeerders voor FPGA~\cite{vprBVRJ, vprboek} doen dit aan de hand van het pathfinder-algoritme~\cite{pathfinder}. Dit is een iteratief algoritme waarbij de gerouteerde netten verschillende keren opgebroken en opnieuw gerouteerd worden. In de eerste iteratie houdt pathfinder weinig tot geen rekening met het overgebruik van routeringsmiddelen op bepaalde plaatsen (congestie). In de daaropvolgende iteraties verhoogt pathfinder geleidelijk de kost van routeringsmiddelen die overgebruikt worden tot er geen congestie meer is.}
 
 \begin{figure}[ht]
 \centering
@@ -180,6 +183,7 @@ bla bla bla
 
 \subsection{My research \hl{(2.5 pages)}}
 
+\hl{Deze paragraaf is niet bruikbaar denk ik.}
 De interconnectiestructuur van een FPGA bestaat uit draden en schakelaars. Een connectie tussen twee logische blokken wordt gemaakt door een aantal schakelaars te sluiten. Dit is mogelijk door de juiste bitwaarden te schrijven in de geheugencellen die deze schakelaars controleren. Door deze bitwaarden uit te drukken als functie van de parameters, bepalen de parameters wanneer een connectie geactiveerd wordt en wanneer niet.
 
 
@@ -188,11 +192,11 @@ De interconnectiestructuur van een FPGA bestaat uit draden en schakelaars. Een c
 
 \subsubsection{Routing techniques}\label{routetech}
 
-Routing resource graph
+\hl{Routing resource graph
 graph based
 move away from graph based routing algorithms
 tile based
-divide and conquer
+divide and conquer}
 
 \newpage
 
@@ -203,6 +207,7 @@ testing, reporting, chapter and thesis writing, and thesis submission date.}
 The research in this project will be divided in 2 big stages:
 
 \subsection{Work Packages}
+\hl{The total time is currently 41 months so 7 months short of 4 years.}
 \begin{description*}
 \item[Hardware Acceleration of the placement (18 months)]\
 
@@ -212,6 +217,8 @@ In het eerste onderdeel zal het prototype verder ontwikkeld worden via de uitbre
 \item[Implementation of GPU Accelerator for Placement (8+1 months)]\
 Na het ontwikkelen van de routeerder kunnen we de plaatser erop afstemmen. Er is ook 1 maand gereserveerd voor het rapporteren over de nieuwe plaatsingsalgoritmes.
 \end{description*}
+
+\hl{Was the idea not to first parallelize and try to accelerate both placers and router, if only to see where the main bottlenecks are in the routing algorithm, and then work on a new router?}
 
 \item[Hardware Acceleration of the the routing (17 months)]\
 
@@ -239,6 +246,7 @@ What do you expect it will deliver?
 What are the expected outcomes? 
 Establish the importance of your project by highlighting its originality or why it is worth pursuing. Highlight the benefits, positive expected outcomes or innovative applications of knowledge.}
 
+\hl{Dirk: I can probably write this part after the rest of the proposal is written.}
 Maybe we can tell here that the first stage is less risk and we are more confident that we will succeed here, because we already developed a good base algorithm that will be easier to parallelize, but for the second stage we did not yet devise a new algorithm. So the second stage has inherent more risk because we have yet to start research there.
 
 
