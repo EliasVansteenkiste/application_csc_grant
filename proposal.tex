@@ -121,8 +121,6 @@ Summary: \emph{FPGA design compilation takes too much time to allow efficient de
 
 \emph{In this Ph.D.\ research proposal, our aim is to significantly reduce the FPGA design compilation time by efficiently parallelizing placement and routing algorithms. In a first phase, we will parallelize and improve the existing placement and routing algorithm implementations. For the routing problem, we envisage that the existing routing algorithms will not allow a significant enough efficiency increase. Therefore, in a second phase, we will investigate new routing algorithms that are much more susceptible to parallelization and are much more efficiently accelerated by hardware than the current implementations.}
 
-\hl{What do you want to know, prove, demonstrate, analyse, test, investigate or examine? List your project aims in a logical sequence.}
-
 The overall high level goal is to reduce the FPGA design compilation time, but in this proposal we mainly want to focus on placement and routing, because they are the main runtime consumers \cite{vansteenkiste2015analyzing}. 
 
 
@@ -134,7 +132,7 @@ examine
 
 
 In the proposal we want to investigate how much placement and routing can be accelerated by writing a specific GPU-kernel based on massively parallelizable placement algorithm.
-Our first aim is to have an modified version of the placement algorithm liquid that can be implemented on GPU. Liquid is a placement algorithm that is being developed at Ghent University \cite{liquid}.  The second aim is to implement the adapted version of Liquid with CUDA \cite{nickolls2008scalable} and demonstrate and measure its performance. The next goal is to develop a new routing algorithm that is suitable for GPU Acceleration. Current graph based algorithms such as the omnipresent Pathfinder algorithm\cite{} are not really well suited for wide-scale parallelism. Another option is to use an FPGA to accelerate the routing algorithm.
+Our first aim is to have an modified version of the placement algorithm liquid that can be implemented on GPU. Liquid is a placement algorithm that is being developed at Ghent University \cite{liquid}.  The second aim is to implement the adapted version of Liquid with CUDA \cite{nickolls2008scalable} and demonstrate and measure its performance. The next goal is to develop a new routing algorithm that is suitable for GPU Acceleration. Current graph based algorithms such as the omnipresent Pathfinder algorithm\cite{} are not suited for wide-scale parallelism. Another option is to use an FPGA to accelerate the routing algorithm.
 
 
 Restrictions of the GPU
@@ -145,36 +143,161 @@ Restrictions of the GPU
 
 \section{Background \hl{(4 pages)}}
 \hl{What is already known or unknown? Set the scene.}
+\subsection{FPGA Architecture}
+FPGAs are becoming an ubiquitous component in digital systems and datacenters \cite{ovtcharov2015accelerating,putnam2015reconfigurable}. The flexibility is one of the main reasons of the rise in popularity. An FPGA can implement any arbitrary digital circuit. The only restriction is the size of the FPGA. To make this possilbe the FPGA is built up by an array of logic blocks. Each logic blocks contains several Look-Up Tables (LUT's) and Flip-flops (FF's). Each LUT is able to implement any boolean function of its inputs. To achieve this the the truth table of the boolean function is written to the configuration memory of the LUT. The logic blocks are embedded in an interconnection network. The interconnection network can be configured by writing values to the memory cells for the switches.
+
+\subsection{The conventional FPGA CAD tool flow}
+
+In conventional FPGA design, an FPGA is configured at boot time by writing a bitstream to the configuration memory. Generating the bitstream is a complex task . 
+Automatic tool flows are developed to aid the designer. These tool flows compile a bitstream starting from a high level description. To manage the complexity, the task is divided and dealt with by seperate tools. An overview of the toolflow is given in Figure \ref{toolflow}. 
+
+\paragraph{Synthesis}
+The designer describes the digital system in a high level description language (HDL) such as VHDL or Verilog or in a high level language such as SystemVerilog or OpenCL. In the synthesis step the description is translated to a netlist of logic gates, hard block instances, inputs and outputs.
+
+\paragraph{Technology Mapping} 
+The netlist of gates is mapped to a circuit with functional blocks present on the target device.
+
+\paragraph{Placement}
+The placer choses a block site on the FPGA for each each functional block in the circuit. The blocks are placed taking into account the different optimisation goals. The important optimization goals are the total wirelength, routability and critical path delay. These goals are not independent. During placement the algorithm has to be able to estimate the quality of the placement at all times, therefor the optimization goals are estimated based only on the location of the functional blocks on the device. 
+
+\paragraph{Routing} After placement the location of the functional blocks is known and enough information is available for routing the nets in the interconnection network of the target device. Routing a net can be reduced to  one of Karp's 21 well-known NP-complete problems, called Steiner Tree Problem. Additionally nets in a circuit can't share any routing resources, because this would lead to short-circuits. The router needs to find disjoint sets of routing resources for each net one set. Most popular academic and commercial FPGA routers use a Pathfinder based algorithm~\cite{pathfinder, vprBVRJ, vprboek}.
 
 \subsection{Existing approaches \hl{(1.5 pages)}}
 
-\hl{Staat er geen overzicht vand e flow in het Engels in de aanvraag van Alexia? Moet wel veel korter om op 1,5 pagina te passen.}
-\hl{FPGA's worden steeds vaker gebruikt als componenten in digitale systemen. Zoals in de probleemstelling is vermeld, is de populariteit van FPGA's te danken aan de flexibiliteit die de (her)configureerbaarheid met zich meebrengt. Op een FPGA kan een willekeurige digitale schakeling ge\"implementeerd worden. De enige beperking is de grootte van de FPGA. Om dit mogelijk te maken bevat de FPGA een rooster van logische blokken. Elk logisch blok bevat op zijn beurt enkele Look-Up Tables (LUT's). Elke LUT kan om het even welke Boolese functie van zijn ingangen implementeren. Dit is mogelijk door de waarheidstabel van deze functie in het geheugen van de LUT te schrijven. De logische blokken zijn ingebed in een interconnectienetwerk dat volledig configureerbaar is. Dit interconnectienetwerk kunnen we configureren door bepaalde waarden te schrijven in de geheugencellen van de schakelaars. De geheugens van zowel de LUT's als de interconnecties vormen samen het configuratiegeheugen van de FPGA. }
+\subsubsection{Conventional Placement}
+\label{sec:convPlace}
+In this chapter I describe the wirelength-driven placement tool that is implemented in VPR \cite{betz1997vanppartffr,betz1999aacfdf}. This simple placer is later used as a starting point to build our own TPLACE placer. 
 
-\subsubsection{Conventional FPGA CAD tools}
-\hl{In klassiek FPGA-ontwerp wordt de FPGA alleen geconfigureerd bij het opstarten of bij updates. Het configuratiegeheugen wordt dan geschreven aan de hand van een configuratiebitstroom. Het genereren van deze bitstroom is een complexe taak. Daarvoor werden geautomatiseerde toolflows ontwikkeld. Deze toolfows zetten een beschrijving van het systeem op RT-niveau om naar een configuratiebitstroom voor de FPGA. Dit gebeurt aan de hand van de volgende stappen (een overzicht is weergegeven in het schema links in Figuur} \ref{toolflows}).
+\subsubsection{The FPGA Placement Problem}
+\label{sec:placeprob}
+%The problem
+An FPGA placement algorithm takes two inputs: the mapped input circuit and a description of the target FPGA architecture. The algorithm searches a legal placement for the functional blocks of the input circuit so that circuit wiring is optimised. In a legal placement every functional block is associated to (placed on) one of the physical blocks (without overlap) that is capable of implementing the functional block. 
 
-\paragraph{Synthesis}
-\hl{De ontwerper beschrijft zijn digitaal systeem aan de hand van een hardwarebeschrijvingstaal (Hardware Description Language). De synthesestap vertaalt de beschrijving naar een netlijst van logische poorten, in- en uitgangen en netten.}
+%\todo{Aanpassen aan structuur tekst}
+For our simple target architecture (Section~\ref{sec:fpga}) there are only three types of functional blocks (inputs, outputs and LUTs) and two types of physical blocks (IOBs and LUTs). The inputs and the outputs can be placed on the IOBs while the functional LUTs can be placed on the physical LUTs.
 
-\paragraph{Technology Mapping} 
-\hl{De technologie-afbeelder beeldt de netlijst met poorten en netten af op een circuit met functionele blokken die aanwezig zijn op de doel-FPGA en netten die deze functionele blokken verbinden.}
+%optimization goals
+The main optimisation goal used by placement tools is to minimise the total wire length required to route the wires in the given placement. Placers that are only based on this goal are called wire-length-driven placers. More complex tools such as routability-driven \cite{swartz1998afrrff} and timing-driven placers \cite{marquardt2000tpff} trade some of the wire-length for
+a more balanced wiring density across the FPGA or a higher maximum clock frequency of the circuit, respectively. For the sake of simplicity, the tools used in this thesis are wire-length-driven.
 
-\paragraph{Placement}
-\hl{De plaatser kiest een logisch blok op de FPGA voor elk functioneel blok in het circuit. De plaatser plaatst de blokken rekening houdend met een optimalisatiecriterium. Mogelijke optimalisatiecriteria zijn minimale draadlengte, routeerbaarheid en minimale vertraging. Deze optimalisatiecriteria zijn niet onafhankelijk van elkaar. In dit project wordt een draadlengte-gedreven plaatser beschouwd. Draadlengte-gedreven plaatsers proberen de blokken zo te plaatsen dat de routeerder een minimum aan routeringsmiddelen nodig heeft om de netten tussen de blokken te routeren.
+%Dificult problem => Heuristic 
+%Easy to addapt => Simulated annealing
+Finding a high quality placement is very important, because poor  quality placements generally cannot be routed or lead to low operation frequencies and high power consumption. Worse, the placement problem is computationally hard, so there are no known algorithms that can find an optimal solution in a reasonable time. Therefore, many heuristics have been developed for the placement problem. Most of these algorithms belong to one of three types of placers: partition-based placers \cite{maidee2005tppfisf}, analytic placers \cite{chan2003ppffga} and simulated annealing placers \cite{betz1997vanppartffr}. Because placers based on simulated annealing are the most used for FPGA placement, the focus lies on this type of placer below.
+%\todo{Is dat eigenlijk wel waar dat SA placers gemakkelijkst aan te passen zijn? Heb je daar ook argumenten voor. Je kan wel zeggen dat deze plaatser met een kostfunctie werkt en enkel die kostfunctie aangepast moet worden maar de anderen zijn misschien even gemakkelijk aan te passen.}
 
-Tijdens de plaatsing moet het plaatsingsalgoritme de kwaliteit van een plaatsing op elk moment kunnen inschatten. Als we optimaliseren voor minimale draadlengte, komt dit erop neer dat de plaatser moet voorspellen hoeveel routeringsmiddelen de routeerder zal nodig hebben. Hiervoor beschikt hij enkel over de posities van de functionele blokken. Om de routeringsmiddelen te schatten, zijn al vele kostenfuncties voorgesteld~}\cite{vprBVRJ, vprboek}. Hoe beter de geschatte routeringsmiddelen overeenkomen met de eigenlijke routeringsmiddelen hoe beter de plaatser zijn werk kan doen.
+\paragraph{Simulated Annealing}
+Simulated annealing \cite{kirkpatrick1983obsa} is inspired on annealing of metals, a technique involving heating and controlled cooling of a material to increase the size of its crystals and reduce their defects.
 
-\paragraph{Routing} Na de plaatsingsstap is de plaats van de logische blokken bekend en is er dus voldoende informatie beschikbaar voor het routeren van de netten in het op de FPGA aanwezige interconnectienetwerk. Het routeren van \'e\'en net is te herleiden tot het Steiner-boomprobleem (een bekend NP-compleet probleem dat door de routeerder opgelost wordt met een heuristiek).
+\paragraph{The Basic Algorithm}
+The psuedo-code for our simulated annealing placer is shown in Figure~\ref{fig:simann}. At any time, the algorithm keeps track of the placement cost. In a wire-length-driven placer this is the sum of the estimated wire-lengths over all nets. The algorithm starts by randomly, but legally, placing the logic blocks in the input circuit on physical blocks of the FPGA architecture. Afterwards, the placer repeatedly tries to interchange the logic blocks placed on two randomly chosen physical blocks. Such an interchange is called a move. If the move causes a decrease in placement cost, the move is always accepted. If on the other hand, the move causes an increase in placement cost the move is accepted with a probability of $e^{-\frac{\Delta C}{T}}$, where $\Delta C$ is the change in cost due to the move and $T$ is a parameter called the temperature, which controls the probability by which hill-climbing moves are accepted. Initially, $T$ is very high so that most moves are accepted. Gradually $T$ is decreased so that the probability by which hill-climbing moves are accepted decreases. When the temperature is decreased in the proper way the result is a low cost placement. The hill-climbing moves allow the placer to escape from local minima.
 
-Netten mogen geen routeringsmiddelen delen want dat zou een kortsluiting veroorzaken. De routeerder moet dus op zoek gaan naar disjuncte verzamelingen van routeringsmiddelen, voor elk net \'e\'en verzameling. De meeste conventionele routeerders voor FPGA~\cite{vprBVRJ, vprboek} doen dit aan de hand van het pathfinder-algoritme~\cite{pathfinder}. Dit is een iteratief algoritme waarbij de gerouteerde netten verschillende keren opgebroken en opnieuw gerouteerd worden. In de eerste iteratie houdt pathfinder weinig tot geen rekening met het overgebruik van routeringsmiddelen op bepaalde plaatsen (congestie). In de daaropvolgende iteraties verhoogt pathfinder geleidelijk de kost van routeringsmiddelen die overgebruikt worden tot er geen congestie meer is.
 
-\begin{figure}[ht]
-\centering
-\includegraphics[width = 0.9\textwidth,trim = 0mm 10mm 0mm 55mm, clip]{toolflows.pdf}
-\caption{Schematische voorstelling van de conventionele en de aangepaste toolflow. Dit doctoraat focust op de donkergrijs gekleurde stappen (TPlace en TRoute).}
-\label{toolflows}
-\end{figure}
+The initial temperature, the rate at which the temperature is decreased, the number of moves that are attempted at each temperature, the way in which potential moves are selected and the exit criterion of the annealer are called the annealing schedule. A good annealing schedule is crucial for finding a good solution in a reasonable amount of time.
+
+\paragraph{The Annealing Schedule}
+In this section I describe the annealing schedule which is used in the VPR placement tool \cite{betz1999aacfdf}. The same annealing schedule is used later to build our new placer called {\sc TPLACE}.
+
+To calculate the initial temperature, $N$ moves are performed on the initial random placement, where $N$ is the total number of logic blocks in the input circuit. At each move $\Delta C$ is calculated as the difference in placement cost before and after the move. The initial temperature is set to 20 times the standard deviation on $\Delta C$. This temperature is so high that almost all moves are accepted at the start of the annealing. This way of calculating the initial temperature was first used by Huang et al \cite{huang1986aegcsfsa}.
+
+As explained in \cite{swartz1990naftparomc}, the number of moves attempted per temperature is set to
+\begin{equation}
+movesPerTemperature = InnerNum \  N^\frac{4}{3}.
+\end{equation}
+%\todo{Wat betekent innerNum?}
+The default value of $InnerNum$ is 10. This number can be used to change the execution time / placement quality tradeoff of the algorithm. Lowering $InnerNum$ reduces the execution time at the cost of a lower placement quality.
+
+In the VPR placement tool the temperature is decreased as a function of the fraction of accepted moves, denoted by $\alpha$. When $\alpha$ is high the functional blocks are almost moved randomly resulting in a limited improvement of the total cost. On the other hand, when $\alpha$ is low the improvement of the total cost is also low because very few moves are accepted. In \cite{lam1988poanas,swartz1990naftparomc} it was shown the best results are obtained when $\alpha$ is kept near to 0.44 for as long as possible. Therefore, the temperature is decreased only slightly when $\alpha$ is in the vicinity of 0.44 and strongly otherwise. The authors of \cite{betz1999aacfdf} realised the best performance with the temperature updating schedule of Equation~(\ref{eqn:tempup}).
+
+
+A second instrument to keep the $\alpha$ close to 0.44 is the range limit \cite{lam1988poanas}, which is denoted as $R_{limit}$. The range limit is the maximal distance in the x and y directions between the two locations of a selected move. When $R_{limit}$ is decreased $\alpha$ increases, because the $\Delta C$ of a move is more likely to be small when the logic blocks that are interchanged are close together. Initially $R_{limit}$ is set to the maximum FPGA dimension. At every temperature change, $R_{limit}$ is updated as follows:
+\begin{equation}
+R_{limit}^{new} = R_{limit}^{old} (1-0.44+\alpha),
+\end{equation}
+which is then limited to the range $1 \le R_{limit} \le$ maximum FPGA dimension. 
+
+Finally, the annealing is terminated when $T$ is a fraction of the average net cost (set to 0.5\% in our case). At this temperature it is unlikely that the quality of the placement will improve because the probability that hill-climbing moves are accepted is almost zero.
+
+\paragraph{Wire-length Estimation}
+\label{sec:wireLengthEstimation}
+As was mentioned in Section~\ref{sec:placeprob}, wire-length-driven placement tools try to minimize the total wire length needed to route all wires in a placement. They thus use the total wire-length as their cost function. The only way to exactly calculate the total wire-length of a given placement is to route the wires in a placement and sum the wire-length over all nets. Since routing is in itself a computationally hard problem, solving it repeatedly for every move tried in the inner loop of the placer and in this way exactly calculating the total wire-length, leads to very long execution times for the placer. Therefore, the cost is not exactly calculated but estimated.
+
+A common way of estimating the total wire-length is shown in Equation~(\ref{eqn:wirelengthest}). The estimate is the sum of the estimated wire lengths of each net, where the wire length of a net is estimated as the half-perimeter of its bounding box weighted by a factor which depends on the number of terminals of the net. The factor $q(.)$ is taken from \cite{cheng1994raaeprm}. It is equal to 1 for nets with up to three terminals and slowly grows to 2.79 for nets with 50 terminals.
+
+\subsection{Conventional Routing: Pathfinder}
+\label{sec:confroute}
+In this section I describe a Negotiated Congestion Router called Pathfinder \cite{mcmurchie1995panprff}, as it is used in VPR \cite{betz1997vanppartffr,betz1999aacfdf}. This router is later used as a base to build our TROUTE router in Chapter~\ref{ch:tconflow}.
+
+\subsubsection{The FPGA Routing Problem}
+Once the placement algorithm has placed each of the logic blocks of the input circuit on a physical block of the FPGA architecture, the router needs to determine which of the switches in the routing architecture need to be closed and which need to be opened in order to connect the physical blocks in accordance to the way their associated logic blocks are connected in the input circuit.
+
+In a routability-driven router the goal is to simply find a legal routing solution while a timing-driven router tries to maximize the circuit clock frequency by allowing critical paths to use shorter and faster routing resources. For the sake of simplicity, the routers used in this theses are routability-driven.
+
+\paragraph{Routing-resource Graph}
+%\todo{Ik zou hier enkel over pathfinder spreken en nog niet over TROUTE.}
+{\sc pathfinder} \cite{mcmurchie1995panprff} uses a directed graph, called the {\em Resource Graph}, as a model for the routing architecture of an FPGA.  Because this graph can be constructed for any useful routing architecture, the algorithm is very flexible. 
+
+The resource graph is a directed graph $C=(N,E)$, where the nodes $N$ represent the routing resources. A directed edge $(t,h)$ represents the possibility of routing a signal from resource $t$ (the tail of the edge) to resource $h$ (the head of the edge), by setting a switch. There are five types of routing resources: wire segments, input pins, output pins, sinks and sources.
+
+Unidirectional switches which, when closed, force the logic value of resource $i$ on resource $o$, are modeled as a directed edge $(i,o)$. Bidirectional switches that connect resource $r$ to resource $s$, are modeled by two directed edges $(r,s)$ and $(s,r)$. This model can be extended for other types of switches like multiplexers \cite{betz1999aacfdf}, but that is beyond the scope of this thesis.
+
+The distinction between input-pin nodes and sink nodes on the one hand and output-pin nodes and source nodes on the other hand is made in order to model logic equivalence of input and output pins \cite{betz1999aacfdf}. The inputs of a 4-input LUT for example are logically equivalent. It does not matter in which order the nets are connected to the input pins of the LUT. A simple permutation of the LUT's truth table preserves the functionality of the input circuit. This extra degree of freedom is important because it improves the routability of the FPGA. Logic equivalence of input pins is modeled in the routing resource graph by connecting each group of logically equivalent input pins to one sink node. If a net needs to be routed to one of the pins, the target of the router is not the pin node but the sink node. In this way the router will automatically choose which of the pins is most efficient to use. A similar mechanism is implemented with output pins and sources.
+
+%\todo{Sources en sinks toevoegen aan figuur}
+
+Figure~\ref{fig:routeArch} (a) shows the resource graph of a simple $2\times 2$ island style FPGA with only length 1 wires and bidirectional switches. The wires are represented by solid black lines, the input pins and output pins by small squares. The input pins are filled and the output pins are not. The sink and source nodes are not shown in the figure. For the sake of clarity I have also not drawn the individual edges. The thin lines each represent two edges, one for each sense.
+
+
+When the routing architecture of the FPGA is represented as a routing-resource graph, the routing algorithm reduces to finding a subgraph of the routing-resource graph, called a routing tree, for each of the nets. These routing trees should be disjoint to avoid short circuits. Each routing tree should contain at least the source nodes and the sink nodes of its associated net and enough wire nodes so that a connection exists between the source node and each of the sink nodes. Figure~\ref{fig:routeArch}~(b) shows the routing tree of a net $(i,\{o_0,o_1,o_2,o_3\})$.
+
+\subsubsection{The Pathfinder Algorithm}
+\label{sec:pathfinder}
+The main structure of the Pathfinder algorithm \cite{mcmurchie1995panprff} is shown in Figure~\ref{fig:pathfinder}. In every routing iteration, the algorithm rips up and reroutes all the nets in the input circuit. These iterations are repeated until no shared resources exist \cite{nair1987asyetfgw} or, in other words, the routing trees of the nets are disjoint. This is achieved by gradually increasing the cost of sharing resources between nets. During the first iteration, nets can share resources at no extra cost and thus, each net is routed with a minimum number of wires. The cost of a routing resource does not only depend on the current sharing cost but also on the sharing history of the resource. Resources that were shared heavily in past routing iterations become more expensive. In this way a congestion map is built, which enables nets to avoid routing through heavily congested resources, if possible.
+
+
+\paragraph{Negotiated Congestion}
+In this section I discuss the details of how the negotiated congestion mechanism updates the cost of the routing resources for a routability-driven router, as described in \cite{betz1999aacfdf}. The cost of a node $n$ is calculated as
+\begin{equation}
+cost(n)=b(n)\cdot p(n) \cdot h(n),
+\end{equation}
+where $b(n)$ is the base cost, $p(n)$ is the present congestion penalty, $h(n)$ is the historical congestion penalty.
+
+The base cost $b(n)$, as used in \cite{betz1999aacfdf}, is given in Table \ref{tbl:baseCost} for the five different node types. The quality of the router's result is not extremely sensitive to the exact values of the base cost, but by choosing the base cost of the input nodes and the sink nodes less than 1 the maze router (see next section) becomes faster.
+
+\begin{table}
+	\caption{Base cost for different node types.}
+	\label{tbl:baseCost}
+	\begin{center}
+		\begin{tabular}{lr}
+\hline	
+Node type & Base cost $b(n)$\\
+\hline		
+wire segment & 1 \\
+output pin   & 1 \\
+input pin    & 0.95 \\
+source       & 1 \\
+sink         & 0 \\
+\hline
+		\end{tabular}
+	\end{center}
+\end{table}
+
+The present congestion penalty, $p(n)$, is updated whenever a net is rerouted. The update is done as follows
+
+where $cap(n)$ represents the capacity of the node and $occ(n)$ is the occupancy of the node. The capacity is the maximum number of nets that can legally use the routing resource. In our simple architecture all nodes have a capacity of 1, except for the sink nodes of the logic blocks which have a capacity of 4. The occupancy of a node is the number of nets that are presently using it. The factor $p_{fac}$ is used to increase the sharing cost as the algorithm progresses. This is explained below.
+
+The historical congestion penalty is updated after every routing iteration, except for the first iteration. The update is done as follows
+
+Again, the factor $h_{fac}$ is used the control the impact of the historical congestion penalty on the total resource cost. 
+
+The way the factors $p_{fac}$ and $h_{fac}$ change as the algorithm progresses is called the routing schedule. Again I use the routing schedule proposed in \cite{betz1999aacfdf}. In this schedule, $h_{fac}$ is held equal to 1 independent of the iteration. On the other hand, $p_{fac}$ is initially set to 0.5 and is doubled in every subsequent iteration.
+
+\paragraph{Routing a Net}
+\label{sec:netRouter}
+The task of the net router is to find a minimum cost routing tree for a given net in the resource graph. As mentioned before the routing tree should contain the source and the sinks of the net and a path from the source to each of the sinks. The cost of the resources is determined by the negotiated congestion mechanism.
+
+The search space of all possible routing trees for a net is huge. Therefore a heuristic was developed that finds a low cost routing tree for a given net in a reasonable amount of time. The algorithm is shown in Figure~\ref{fig:netRouter}. It is a variant of a maze router~\cite{lee1961aafpcaia}. The maze router loops over all the sinks of the net and extends the already found routing tree with the shortest path from this routing tree to the sink under consideration. The shortest path is found using Dijk\-stra's algorithm \cite{dijkstra1959anotpicwg}.
+
+
 
 \subsubsection{Placement techniques}\label{placementtech}
 
@@ -187,24 +310,31 @@ bla bla bla
 \subsubsection{Routing techniques}\label{routingtech}
 
 \paragraph{Pathfinder}
-bla bla bla
+Dit is een iteratief algoritme waarbij de gerouteerde netten verschillende keren opgebroken en opnieuw gerouteerd worden. In de eerste iteratie houdt pathfinder weinig tot geen rekening met het overgebruik van routeringsmiddelen op bepaalde plaatsen (congestie). In de daaropvolgende iteraties verhoogt pathfinder geleidelijk de kost van routeringsmiddelen die overgebruikt worden tot er geen congestie meer is.
 
 \paragraph{State-of-the-art advances}
 bla bla bla
 
-\subsection{My research \hl{(2.5 pages)}}
+\section{My research \hl{(2.5 pages)}}
 
 \begin{figure}[ht]
 \centering
 \includegraphics[width = 0.50\textwidth,trim = 0mm 90mm 140mm 2mm, clip]{toolflow}
 \caption{Schematic representation of the toolflow. The placement and routing step will be accelerated by a GPU kernel.}
+\label{toolflow}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width = 0.75\textwidth,trim = 0mm 50mm 0mm 40mm, clip]{runtime_breakdown}
+\caption{Breakdown per tool of the compilation runtime.}
 \label{toolflows}
 \end{figure}
 
-\subsubsection{Placement techniques}\label{placetech}
+\subsection{Placement techniques}\label{placetech}
 
 
-\subsubsection{Routing techniques}\label{routetech}
+\subsection{Routing techniques}\label{routetech}
 
 \hl{Routing resource graph
 graph based
@@ -222,20 +352,20 @@ The research in this project will be divided in 2 big stages:
 
 \subsection{Work Packages}
 \begin{description*}
-\item[Hardware Acceleration of the placement (18 months)]\
+\item[Hardware Acceleration of the placement (20 months)]\
 
 \begin{description*}
 \item[Adapt the liquid placement algorithm for wide-scale parallelization (9+1 months)]\
 In the first step the placer prototype will be further developed and elaborated with the features that were described in the previous section. After this work there is one month allocated for writing a conference paper to report about the initial results.
 \item[Implementation of GPU Accelerator for Placement (9+1 months)]\
-After developing the placement algorithm, it will be implemented on the GPU. Measurements and results will be reported in another conference paper and a demonstration will be held at one of the workshops accompanying a conference. 
+\\After developing the placement algorithm, it will be implemented on the GPU. Measurements and results will be reported in another conference paper and a demonstration will be held at one of the workshops accompanying a conference. 
 \end{description*}
 
 \item[Hardware Acceleration of the the routing (17 months)]\
 
 \begin{description*}
 \item[Exploration new routing algorithms for wide-scale parallelization (8 months)] 
-New scalable routing algorithms with 
+Exploring different routing algorithms and devising new algorithms with wide-scale parallelisation in mind. After exploration, the prototype will be implemented and tested. The results will be reported in a conference publication.
 \item[Implementation of GPU/FPGA accelerator for Routing (9+1 months)]
 After developing the routing algorithm, it will be implemented on the GPU/FPGA. Measurements and results will be reported in another conference paper and a demonstration will be held at one of the workshops accompanying a conference. 
 \end{description*}
@@ -257,8 +387,9 @@ What do you expect it will deliver?
 What are the expected outcomes? 
 Establish the importance of your project by highlighting its originality or why it is worth pursuing. Highlight the benefits, positive expected outcomes or innovative applications of knowledge.}
 
-\hl{Dirk: I can probably write this part after the rest of the proposal is written.}
+\hl{Dirk: I can probably write this part after the rest of the proposal is written.\\
 Elias: Maybe we can tell here that the first stage is less risk and we are more confident that we will succeed here, because we already developed a good base algorithm that will be easier to parallelize, but for the second stage we did not yet devise a new algorithm. So the second stage has inherent more risk because we have yet to start research there.
+@Yun: Can you make a figure for the planning?}
 
 
 \subsection{Context and Strategy}\label{context}
