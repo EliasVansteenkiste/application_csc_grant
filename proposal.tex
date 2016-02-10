@@ -79,7 +79,7 @@
 \vspace{45mm}
 \Large Yun Zhou \\
 \vspace{2mm}
-\small\texttt{\hl{email@address.com}} \\
+\small\texttt{zhouyun\_zy@foxmail.com} \\
 \vspace{20mm}
 \Large Advisor: ir.\ Elias Vansteenkiste \\
 \small\texttt{Elias.Vansteenkiste@ugent.be} \\
@@ -100,14 +100,14 @@
 \clearpage
 
 \section{Problem Definition \hl{(1 page)}}
-A Field Programmable Gate Array (FPGA) is an integrated circuit made up of a grid of programmable functional blocks embedded in a programmable interconnection network. An FPGA can be programmed to implement any arbitrary logic function in the same way as Application Specific Integrated Circuits (ASICs), however the functionality of an FPGA is not fixed during the production process. The functionality can be changed by writing a different configuration to the configuration memory. This flexibility of the FPGAs leads to a substantial reduction of the economic risk of developing hardware accelerators. It also explains the rise in the popularity of the FPGA. Unfortunately the flexibility of the FPGA comes at a price.  Each time the application developer wants to test his design, the design has to be compiled to a FPGA configuration and this is a complex and time consuming process. Unfortunately the designer typically needs to compile his application numerous times to test if his/her design meets the constraints of the application. 
+A Field Programmable Gate Array (FPGA) is an integrated circuit made up of a grid of programmable functional blocks embedded in a programmable interconnection network. An FPGA is used to accelerate any arbitrary logic function in the same way as Application Specific Integrated Circuits (ASICs), however the functionality of an FPGA is not fixed during the production process. The functionality can be changed by writing a different configuration to the configuration memory. This flexibility leads to a substantial reduction of the economic risk of developing hardware accelerators. It also explains the rise in the popularity of the FPGA~\cite{putnam2015reconfigurable}. Unfortunately the flexibility of the FPGA comes at a price.  Each time the application developer wants to test his design, the design has to be compiled to an FPGA configuration and this is a complex and time consuming process. Unfortunately the designer typically needs to compile his application numerous times to test if his/her design meets the constraints of the application. 
 
 The main FPGA device manufacturers and the academic community have developed a chain of heuristics to solve the NP hard problems involved in the compilation.
-The compilation/translation of a high-level description of the application to a FPGA configuration is typically divided in several steps. In each step NP hard problems have to be solved and heuristics were and are being developed to try to approximate an optimal solution. The most time-consuming steps are the placement and routing steps. They are the last steps at the backend of the tool flow. These steps have to performed to obtain accurate timing information, which is needed to assess if the design meets the constraints. 
+The compilation/translation of a high-level description of the application to an FPGA configuration is typically divided in several steps. In each step NP hard problems have to be solved and heuristics were and are being developed to try to approximate an optimal solution. The most time-consuming steps are the placement and routing steps. They are the last steps at the backend of the tool flow. These steps have to performed to obtain accurate timing information, which is needed to assess if the design meets the constraints. 
  
 Another trend is the increase in both the size of applications and the size of the target devices. FPGA device and application sizes are still increasing following Moore's law~\cite{shannon2015technology}. Unfortunately the power of the FPGA CAD tools lags behind. The traditional CAD heuristics scale very badly in terms of application and device size, which translates to waiting times of hours up until days for compilation to finish \cite{murray2015timing}. 
 
-Since the introduction of high-level synthesis\cite{ref naar HLS tool AutoESL http://www.eetimes.com/author.asp?section_id=36&doc_id=1284904}, more and more engineers with a software background attempt to accelerate applications with an FPGA. They are used to gcc-like compilation times. Their design methodologies are adapted to these short compilation times. In order to fix bugs and measure performance the compilation is performed numerous times. Hence, they cannot accept the long compilation times that are common in FPGA design.
+Since the introduction of high-level synthesis~\cite{autoesl}, more and more engineers with a software background attempt to accelerate applications with an FPGA. They are used to gcc-like compilation times. Their design methodologies are adapted to these short compilation times. In order to fix bugs and measure performance the compilation is performed numerous times. Hence, they cannot accept the long compilation times that are common in FPGA design.
 
 To overcome this problem, device manufacturers and academics developed multi-threaded versions of the heuristic algorithms \cite{ludwin2011,gort2012,betz2013method,jain2014multi}, but unfortunately scalability issues still exist and large designs still need hours to be compiled. To further speed up compilation a straightforward path is to use hardware acceleration, but unfortunately the current multi-threaded algorithms for placement and routing are hard to adapt for the wide scale parallelisation used in hardware accelerators such as GPUs and FPGAs.
 
@@ -124,27 +124,31 @@ Summary: \emph{FPGA design compilation takes too much time to allow efficient de
 The overall high level goal is to reduce the FPGA design compilation time, but in this proposal we mainly want to focus on placement and routing, because they are the main runtime consumers \cite{vansteenkiste2015analyzing}. 
 
 
-
+\hl{
 prove
 analyse
 test
 examine
+}
+
+In the proposal we want to investigate how much placement and routing can be accelerated by writing a specific GPU-kernel based on a massively parallelizable placement algorithm.
+Our first aim is to have a modified version of the placement algorithm {\sc Liquid} that can be implemented on GPU. {\sc Liquid} is a placement algorithm that is being developed at Ghent University \cite{liquid}.  The second aim is to implement the adapted version of {\sc Liquid} with CUDA \cite{nickolls2008scalable} and demonstrate and measure its performance.
+
+The next goal is to develop a new routing algorithm that is suitable for GPU Acceleration. Current graph based algorithms such as the omnipresent Pathfinder algorithm~\cite{} are not suited for wide-scale parallelism. We will investigate the introduction of new routing algorithms that are much more prone to exploiting massive parallelism for being accelerated by a GPU
+implementation. Another option is to use an FPGA to accelerate the routing algorithm. In both cases, significantly novel routing techniques will have to be developed to enable a significant efficiency increase of the routing algorithm implementation.
 
 
-In the proposal we want to investigate how much placement and routing can be accelerated by writing a specific GPU-kernel based on massively parallelizable placement algorithm.
-Our first aim is to have an modified version of the placement algorithm liquid that can be implemented on GPU. Liquid is a placement algorithm that is being developed at Ghent University \cite{liquid}.  The second aim is to implement the adapted version of Liquid with CUDA \cite{nickolls2008scalable} and demonstrate and measure its performance. The next goal is to develop a new routing algorithm that is suitable for GPU Acceleration. Current graph based algorithms such as the omnipresent Pathfinder algorithm\cite{} are not suited for wide-scale parallelism. Another option is to use an FPGA to accelerate the routing algorithm.
-
-
-Restrictions of the GPU
+\hl{Restrictions of the GPU}
 
 
 
 \newpage
 
 \section{Background \hl{(4 pages)}}
+\label{background}
 \hl{What is already known or unknown? Set the scene.}
 \subsection{FPGA Architecture}
-FPGAs are becoming an ubiquitous component in digital systems and datacenters \cite{ovtcharov2015accelerating,putnam2015reconfigurable}. The flexibility is one of the main reasons of the rise in popularity. An FPGA can implement any arbitrary digital circuit. The only restriction is the size of the FPGA. To make this possilbe the FPGA is built up by an array of logic blocks. Each logic blocks contains several Look-Up Tables (LUT's) and Flip-flops (FF's). Each LUT is able to implement any boolean function of its inputs. To achieve this the the truth table of the boolean function is written to the configuration memory of the LUT. The logic blocks are embedded in an interconnection network. The interconnection network can be configured by writing values to the memory cells for the switches.
+FPGAs are becoming ubiquitous components in digital systems and datacenters \cite{ovtcharov2015accelerating,putnam2015reconfigurable}. Their flexibility is one of the main reasons of the rise in their popularity. An FPGA can implement any arbitrary digital circuit. The only restriction is the size of the FPGA. To make this possilbe the FPGA is built up by an array of logic blocks. Each logic block contains several Look-Up Tables (LUTs) and Flip-flops (FFs). Each LUT is able to implement any boolean function of its inputs. To achieve this the truth table of the boolean function is written to the configuration memory of the LUT. The logic blocks are embedded in an interconnection network. The interconnection network can be configured by writing values to the memory cells for the switches.
 
 \begin{figure}[t]
 \centering
@@ -153,10 +157,9 @@ FPGAs are becoming an ubiquitous component in digital systems and datacenters \c
 \label{toolflow}
 \end{figure}
 
-\subsection{The Conventional FPGA CAD tool flow}
+\subsection{The FPGA CAD tool flow}
 
-In conventional FPGA design, an FPGA is configured at boot time by writing a bitstream to the configuration memory. Generating the bitstream is a complex task . 
-Automatic tool flows are developed to aid the designer. These tool flows compile a bitstream starting from a high level description. To manage the complexity, the task is divided and dealt with by seperate tools. An overview of the toolflow is given in Figure \ref{toolflow}. 
+An FPGA is configured at boot time by writing a bitstream to the configuration memory. Generating the bitstream is a complex task. Automatic tool flows are developed to aid the designer. These tool flows compile a bitstream starting from a high level description. To manage the complexity, the task is divided and dealt with by seperate tools. An overview of the toolflow is given in Figure \ref{toolflow}. 
 
 \paragraph{Synthesis}
 The designer describes the digital system in a high level description language (HDL) such as VHDL or Verilog or in a high level language such as SystemVerilog or OpenCL. In the synthesis step the description is translated to a netlist of logic gates, hard block instances, inputs and outputs.
@@ -165,9 +168,9 @@ The designer describes the digital system in a high level description language (
 The netlist of gates is mapped to a circuit with functional blocks present on the target device.
 
 \paragraph{Placement}
-The placer choses a block site on the FPGA for each each functional block in the circuit. The blocks are placed taking into account the different optimisation goals. The important optimization goals are, in order of increasing importance, the total wirelength, routability and critical path delay. These goals are not independent. During placement the algorithm has to be able to estimate the quality of the placement at all times, therefor the optimization goals are estimated based only on the location of the functional blocks on the device. 
+The placer choses a block site on the FPGA for each functional block in the circuit and places the blocks according to the different optimisation goals. In order of increasing importance, the optimization goals are the total wirelength, routability and critical path delay. These goals are not independent. During placement the algorithm has to be able to estimate the quality of the placement at all times, therefore the optimization goals are estimated based only on the location of the functional blocks on the device. 
 
-\paragraph{Routing} After placement the location of the functional blocks is known and enough information is available for routing the nets in the interconnection network of the target device. Routing a net can be reduced to  one of Karp's 21 well-known NP-complete problems, called Steiner Tree Problem. Additionally nets in a circuit can't share any routing resources, because this would lead to short-circuits. The router needs to find disjoint sets of routing resources for each net one set. Most popular academic and commercial FPGA routers use a Pathfinder based algorithm~\cite{pathfinder, vprBVRJ, vprboek}.
+\paragraph{Routing} After placement the location of the functional blocks is known and enough information is available for routing the nets in the interconnection network of the target device. Routing a net can be reduced to  one of Karp's 21 well-known NP-complete problems, called Steiner Tree Problem. Additionally nets in a circuit can't share any routing resources, because this would lead to short-circuits. The router needs to find disjoint sets of routing resources, for each net one set. Most popular academic and commercial FPGA routers use a Pathfinder based algorithm~\cite{pathfinder, vprBVRJ, vprboek}.
 
 \subsubsection{Runtime breakdown}
 \begin{figure}[t]
@@ -177,7 +180,7 @@ The placer choses a block site on the FPGA for each each functional block in the
 \label{rt}
 \end{figure}
 
-In Figure~\ref{rt}, a pie chart indicates the runtimes for the different steps in the compilation of the toolflow. These were obtained for a popular academic tool flow, called Verilog-To-Routing~\cite{luu2014vtr} and for the commercial tool flow from Xilinx, called Vivado \cite{feist2012vivado} using the framework in~\cite{vansteenkiste2015analyzing}. The majority of the runtime is clearly consumed by placement and routing. This is also brought to the attention by other important publications, such as \cite{murray2015timing}.
+In Figure~\ref{rt}, a pie chart indicates the runtimes for the different steps in the compilation of the toolflow. These were obtained for the popular academic tool flow Verilog-To-Routing~\cite{luu2014vtr} and for the commercial tool flow from Xilinx, Vivado \cite{feist2012vivado}, using the framework in~\cite{vansteenkiste2015analyzing}. The majority of the runtime is clearly consumed by placement and routing. This is also stated by other important publications, such as \cite{murray2015timing}.
 
 \subsection{Existing approaches \hl{(1.5 pages)}}
 
@@ -200,31 +203,30 @@ Finding a high quality placement is very important, because poor  quality placem
 \subsubsection{Simulated Annealing}
 Simulated annealing \cite{kirkpatrick1983obsa} is inspired on annealing of metals, a technique involving heating and controlled cooling of a material to increase the size of its crystals and reduce their defects.
 
-\paragraph{The Basic Algorithm}
+\paragraph{The Basic Algorithm}\hl{I think here you can significantly shorten.}
 At any time, the algorithm keeps track of the placement cost. In a wire-length-driven placer this is the sum of the estimated wire-lengths over all nets. The algorithm starts by randomly, but legally, placing the logic blocks in the input circuit on physical blocks of the FPGA architecture. Afterwards, the placer repeatedly tries to interchange the logic blocks placed on two randomly chosen physical blocks. Such an interchange is called a move. If the move causes a decrease in placement cost, the move is always accepted. If on the other hand, the move causes an increase in placement cost the move is accepted with a probability of $e^{-\frac{\Delta C}{T}}$, where $\Delta C$ is the change in cost due to the move and $T$ is a parameter called the temperature, which controls the probability by which hill-climbing moves are accepted. Initially, $T$ is very high so that most moves are accepted. Gradually $T$ is decreased so that the probability by which hill-climbing moves are accepted decreases. When the temperature is decreased in the proper way the result is a low cost placement. The hill-climbing moves allow the placer to escape from local minima.
-
 
 The initial temperature, the rate at which the temperature is decreased, the number of moves that are attempted at each temperature, the way in which potential moves are selected and the exit criterion of the annealer are called the annealing schedule. A good annealing schedule is crucial for finding a good solution in a reasonable amount of time.
 
 \paragraph{Wire-length Estimation}
 \label{sec:wireLengthEstimation} The only way to exactly calculate the total wire-length of a given placement is to route the wires in a placement and sum the wire-length over all nets. Since routing is in itself a computationally hard problem, solving it repeatedly for every move tried in the inner loop of the placer and in this way exactly calculating the total wire-length, leads to very long execution times for the placer. Therefore, the cost is not exactly calculated but estimated.
 
-A common way of estimating is calculating the sum of the estimated wire lengths of each net, where the wire length of a net is estimated as the half-perimeter of its bounding box weighted by a factor which depends on the number of terminals of the net. The factor $q(.)$ is taken from \cite{cheng1994raaeprm}. It is equal to 1 for nets with up to three terminals and slowly grows to 2.79 for nets with 50 terminals.
+A common way of estimating is calculating the sum of the estimated wire lengths of each net, where the wire length of a net is estimated as the half-perimeter of its bounding box weighted by a factor which depends on the number of terminals of the net (taken from \cite{cheng1994raaeprm}). %It is equal to 1 for nets with up to three terminals and slowly grows to 2.79 for nets with 50 terminals.
 
 \paragraph{Problems with using Simulated Annealing}
 Typically the number of moves performed per temperature step is not linear with the number of blocks, which leads to long runtimes.
-Although it seems straightforward to adapt simulated annealing for multiple threads, the quality of the solution and the speedup gain per thread deteriorate fast as the number of threads increase \cite{ludwin2011}. This mainly caused by collisions and synchronization issues. In multi-threaded solutions each thread swaps blocks independently, instead of swapping blocks sequentially.
+Although it seems straightforward to adapt simulated annealing for multiple threads, the quality of the solution and the speedup gain per thread deteriorate fast as the number of threads increase \cite{ludwin2011}. This is mainly caused by collisions and synchronization issues. In multi-threaded solutions each thread swaps blocks independently, instead of swapping blocks sequentially.
 
 \subsubsection{Analytical Placement}
 In analytical placement the placement problem is represented as a linear system of equations. Solving this linear system gives us the optimal locations for the blocks in the circuit. The system of equations is obtained by taking the partial derivatives of the square of the total wire-length. 
 % in order to minimise the wire length. 
-Unfortunately the solution typically does not contain discrete block positions and blocks may overlap. However placing blocks on the FPGA requires blocks to not overlap and the block positions are located at discrete positions. 
+Unfortunately the solution typically does not contain discrete block positions and blocks may overlap. However, placing blocks on the FPGA requires blocks to not overlap and the block positions are located at discrete positions. 
 To overcome this the solution is legalised, but after legalising we typically end up with a detoriated placement. To improve the placement, a new system of equations is built not only based on the wire length of the connections, but also on the distance to the legalized position, called anchor positions. These anchors are refreshed each time a solution is legalized.
 Multiple iterations of solve-legalize are performed, while increasing the weight of the anchor connections. The algorithm typically stops if the decrease in cost of the legalized solution starts to slow down and converge towards the cost of the solved solution.  The solution typically converges after 20 iterations, depending on how fast anchor weights are increased. 
 
 \paragraph{Problems with using Analytical Placement}
-Each iteration the linear system is solved, building the linear system takes time. A matrix of size of NxN is constructed, with N being the number of connections. The matrix is sparse however and can be stored efficiently with compressed row format, but despite the compression it is an extra memory requirement, making analytical placement less scalable in terms of memory.
-Solving the linear system and the legalisation method both are hard to parallelise, they both require synchronisation.
+Each iteration the linear system is solved, it takes time to build it. A matrix of size NxN is to be constructed, with N being the number of connections. Although the matrix is sparse and can be stored efficiently with compressed row format, it requires extra memory, making analytical placement less scalable in terms of memory.
+Both solving the linear system and the legalisation method are hard to parallelise and require synchronisation.
 
 \subsubsection{The FPGA Routing Problem}
 Once the placement algorithm has placed each of the logic blocks of the input circuit on a physical block of the FPGA architecture, the router needs to determine which of the switches in the routing architecture need to be closed and which need to be opened in order to connect the physical blocks in accordance to the way their associated logic blocks are connected in the input circuit. The goal is not only to find a legal routing solution but also to try to maximise the circuit clock frequency by allowing critical paths to use shorter and faster routing resources.
@@ -236,12 +238,12 @@ The resource graph is a directed graph $C=(N,E)$, where the nodes $N$ represent 
 
 When the routing architecture of the FPGA is represented as a routing-resource graph, the routing algorithm reduces to finding a subgraph of the routing-resource graph, called a routing tree, for each of the nets. These routing trees should be disjoint to avoid short circuits. Each routing tree should contain at least the source nodes and the sink nodes of its associated net and enough wire nodes so that a connection exists between the source node and each of the sink nodes.
 
-\subsubsection{Pathfinder: A Negotiated Congestion Router}
+\subsubsection{{\sc Pathfinder}: A Negotiated Congestion Router}
 \label{sec:pathfinder}
-Pathfinder algorithm \cite{pathfinder} tries to solve the problem in several iterations. In every routing iteration, the algorithm rips up and reroutes all the nets in the input circuit. These iterations are repeated until no shared resources exist \cite{nair1987asyetfgw} or, in other words, the routing trees of the nets are disjoint. This is achieved by gradually increasing the cost of sharing resources between nets. During the first iteration, nets can share resources at no extra cost and thus, each net is routed with a minimum number of wires. The cost of a routing resource does not only depend on the current sharing cost but also on the sharing history of the resource. Resources that were shared heavily in past routing iterations become more expensive. In this way a congestion map is built, which enables nets to avoid routing through heavily congested resources, if possible.
+The {\sc Pathfinder} algorithm \cite{pathfinder} tries to solve the problem in several iterations. In every routing iteration, the algorithm rips up and reroutes all the nets in the input circuit. These iterations are repeated until no shared resources exist \cite{nair1987asyetfgw} or, in other words, the routing trees of the nets are disjoint. This is achieved by gradually increasing the cost of sharing resources between nets. During the first iteration, nets can share resources at no extra cost and thus, each net is routed with a minimum number of wires. The cost of a routing resource does not only depend on the current sharing cost but also on the sharing history of the resource. Resources that were shared heavily in past routing iterations become more expensive. In this way a congestion map is built, which enables nets to avoid routing through heavily congested resources, if possible.
 
 \paragraph{Routing a Net}
-The task of the net router is to find a minimum cost routing tree for a given net in the resource graph. As mentioned before the routing tree should contain the source and the sinks of the net and a path from the source to each of the sinks. The cost of the resources is determined by the negotiated congestion mechanism.
+The task of the net router is to find a minimum cost routing tree for a given net in the resource graph. As mentioned before, the routing tree should contain the source and the sinks of the net and a path from the source to each of the sinks. The cost of the resources is determined by the negotiated congestion mechanism.
 
 The search space of all possible routing trees for a net is huge. Therefore a heuristic was developed that finds a low cost routing tree for a given net in a reasonable amount of time. Typically a variant of a maze router is used~\cite{lee1961aafpcaia}. The maze router loops over all the sinks of the net and extends the already found routing tree with the shortest path from this routing tree to the sink under consideration. The shortest path is found using Dijkstra's algorithm \cite{dijkstra1959anotpicwg}.
 
@@ -253,8 +255,8 @@ The search space of all possible routing trees for a net is huge. Therefore a he
 \end{figure}
 
 \subsubsection{State-of-the-art advances in routing techniques}
-In~\cite{vansteenkiste2013connection} the authors were able to further refine the negotiated congestion mechanism to the level of connections. Nets are partially ripped up and rerouted, this allows us to only reroute congested connections, which helps us to avoid large routing runtimes for the large fanout nets. Others have developed multi-threaded routers. Gort et al. developed an multi-threaded router that splits up the nets in a circuit depending on the location of their terminals on the FPGA~\cite{gort2010deterministic}. Two nets can be routed concurrently in case they have terminals that are not located in each others bound box, as depicted in Figure~\ref{geopara}.
-Another advance is the dynamic expansion of the routing resource graph, which leads to reduction in memory usage~\cite{moctar2015fast}. 	
+In~\cite{vansteenkiste2013connection} the authors were able to further refine the negotiated congestion mechanism to the level of connections. Nets are partially ripped up and rerouted, this allows us to only reroute congested connections, which helps us to avoid large routing runtimes for the large fanout nets. Others have developed multi-threaded routers. Gort et al. developed a multi-threaded router that splits up the nets in a circuit depending on the location of their terminals on the FPGA~\cite{gort2010deterministic}. Two nets can be routed concurrently in case they have terminals that are not located in each others bound box, as depicted in Figure~\ref{geopara}.
+Another advance is the dynamic expansion of the routing resource graph, which leads to a reduction in memory usage~\cite{moctar2015fast}. 	
 Adapting the routing architecture to speed up the routing is what the authors tried in~\cite{gort2013combined}.
 
 
@@ -262,22 +264,22 @@ Adapting the routing architecture to speed up the routing is what the authors tr
 
 \subsection{Placement techniques}\label{placetech}
 
-For placement we have a clear proposal, because the research group HES, that I would be part of, has developed a placement algorithm with large scale parallelism in mind. The algorithm is called Liquid and a single threaded version is available~\cite{liquid}.
+For placement we have a clear proposal, because the research group HES, that I would be part of, has developed a placement algorithm with large scale parallelism in mind. The algorithm is called {\sc Liquid} and a single threaded version is available~\cite{liquid}.
 
-\paragraph{Liquid}
-Liquid is based on analytical placement. It is also an iterative algorithm in which optimised placement and legalised versions of the placement are generated in each iteration. In contrast to analytical placement there is no linear system that is solved in each iteration. In each iteration all the blocks are moved a few times.  The blocks are moved in the direction of the steepest gradient descent. For each block a move vector is calculated based on the previous position of the other blocks that are attached to it. The cost function is the sum of the estimated routing and timing cost of the nets attached to the block. All movement vectors can be calculated independently, which makes it uniquely suitable for parallelisation.
+\paragraph{{\sc Liquid}}
+{\sc Liquid} is based on analytical placement. It is also an iterative algorithm in which optimised placement and legalised versions of the placement are generated in each iteration. In contrast to analytical placement there is no linear system that is solved in each iteration. In each iteration all the blocks are moved a few times.  The blocks are moved in the direction of the steepest gradient descent. For each block a move vector is calculated based on the previous position of the other blocks that are attached to it. The cost function is the sum of the estimated routing and timing cost of the nets attached to the block. All movement vectors can be calculated independently, which makes it uniquely suitable for parallelisation.
 
 %texture with all positions of previous locations
 
 \paragraph{Legalizer}
-In the current implementation the blocks are moved following the steepest gradient descent a few times before the positions are legalised. The legaliser tries to spreads the blocks and assign a legal position to each block without any overlapping blocks. Regions of overlapping blocks are gradually spread, but sometimes two regions clash while expanding the region. This and similar edge cases have to be captured and handled correctly. This is hard to make concurrent, because there are a lot of dependencies between the blocks. 
-Instead our idea is to keep the movement of the blocks independent and so we introduce a legalising phase, in which we will move the blocks a few steps but it will not follow the steepest gradient descent of the cost function, but it will try to move each block to a legal position, while also repelling each other to prevent overlap. These moves will not lead to a completely legalised solution, but a nearly legalised solution. Based on experiments we know that it does not really influence the quality of the final solution if the intermediary solutions are not completely legalised.  At the end there will be one step of completely legalising, but this will be performed on the CPUs.
+In the current implementation the blocks are moved following the steepest gradient descent a few times before the positions are legalised. The legaliser tries to spread, the blocks and assign a legal position to each block without any overlapping blocks. Regions of overlapping blocks are gradually spread, but sometimes two regions clash while expanding the region. This and similar edge cases have to be captured and handled correctly. This is hard to make concurrent, because there are a lot of dependencies between the blocks. 
+Instead, our idea is to keep the movement of the blocks independent and introduce a legalising phase in which we will move the blocks a few steps not following the steepest gradient descent of the cost function, but trying to move each block to a legal position, while also repelling each other to prevent overlap. These moves will not lead to a completely legalised solution, but a nearly legalised solution. Based on experiments we know that it does not really influence the quality of the final solution if the intermediate solutions are not completely legalised.  At the end there will be one step of completely legalising, but this will be performed on the CPUs.
 
 \paragraph{Timing analysis}
-In a timing analysis the most critical connections are identified by traversing the timing graph. The connections determine the weights of the nets
-In the current implementation of liquid, we don't do a timing analysis after each optimize-legalise iteration, but we only do it each 5 iterations, because the criticality of the nets doesn't change not that extremely between iterations. 
+In a timing analysis the most critical connections are identified by traversing the timing graph. The connections determine the weights of the nets.
+In the current implementation of {\sc Liquid}, we don't do a timing analysis after each optimize-legalise iteration, but we only do it each 5 iterations, because the criticality of the nets doesn't change extremely between iterations. 
 So there is an option to do timing analysis on the CPUs concurrently, while the moves are being performed by the GPUs, but it will be the subject of research if this will degrade the quality of result of the final placement.
-Another research path will be also adapting timing analysis to be able run it on the GPU. This will involve accelerating breadth-first search, because that is one of the main components of timing analysis. This is not straightforward because it involves graph traversal and pointer chasing, but Merrill et al. showed significant speedups in \cite{Merrill2015}.
+Another research path will be to also adapt timing analysis to be able to run it on the GPU. This will involve accelerating breadth-first search, because that is one of the main components of timing analysis. This is not straightforward because it involves graph traversal and pointer chasing, but Merrill et al. showed significant speedups in \cite{Merrill2015}.
 
 
 
@@ -287,20 +289,20 @@ Another research path will be also adapting timing analysis to be able run it on
 \subsection{Routing techniques}\label{routetech}
 
 Many multithreading strategies for the routing problem have been proposed in the past, but the limitations of the SIMD architecture present in GPUs forces us to simplify the problem if we want to make use of the massive parallelism offered by the GPU.
-In what follows we describe the different strategies that will be investigated during the phd research. Depending the feasibility, different strategies may be combined.
+In what follows we describe the different strategies that will be investigated during the Ph.D.\ research. Depending on the feasibility, different strategies may be combined.
 
-\paragraph{Route connections in parallel} Route sets of connections in parallel.
-As mentioned in the background the first routing iteration takes the largest portion of runtime because each connection needs to be routed.
+\paragraph{Route sets of connections in parallel} 
+As mentioned in Section~\ref{background}, the first routing iteration takes the largest portion of runtime because each connection needs to be routed.
 Important is that the connections in the first iterations are routed independently because in the first iteration the router typically does not take into account congestion cost, but only delay. Routing the connections can be done in parallel. Routing a connection is done by performing an A*-search in the routing resource graph of the FPGA.
-A* path-finding search algorithm is very famous in games for finding shortest distance between two nodes. Today's games have thousands of agents moving at a same time in a cost field. Thus it has become very important to find shortest paths concurrently and in a speedy way. Making use of GPU's highly parallel multi-threaded nature suits this scenario perfectly \cite{bleiweiss2008gpu,bleiweiss2012system}
+The A* path-finding search algorithm is very famous in games for finding the shortest distance between two nodes. Today's games have thousands of agents moving at the same time in a cost field. Thus it has become very important to find shortest paths concurrently and in a speedy way. Making use of GPU's highly parallel multi-threaded nature suits this scenario perfectly \cite{bleiweiss2008gpu,bleiweiss2012system}.
  All A*-search wavefronts will be started in parallel. Each thread will behave as a single router. It will have its own priority queue. The instructions will be the same for all router threads and can therefor be executed in one warp. Pop a node from the priority queue. Check if we reached our target and if not add the neighbours to the priority queue. After each router thread found its target, a new warp can be started with threads that backtrace the path that lead to the target. Each thread spawns its own routing trace on a per cycle basis. For each connection there will be one backtrace thread. All backtrace threads will have the same instructions. They are also responsible for producing a series of history congestion cost updates. These updates are used after a batch of connections is done to build/update the congestion map.
 % foreseeable problem: investigate visitation statuses of the nodes in the graph
 
 \paragraph{Parallelize the Search}
-A finer grained approach is parallelizing the A*-search in itself. The wavefront is expanded by different threads. A fixed number of nodes are popped from the priority queue and each thread processes the node separately. Each thread checks if the target is reached and if not the cost of the neighbouring nodes is calculated and added to the priority queue in a similar way as done in~\cite{Merrill2015}. The wavefront of a A*-search is typically directed towards the goal and so it only makes sense to expand a limited amount of nodes at a time, so we suggest to use the maximum number of threads in one warp, this is typically 32. This finer grained approach could be applied in the later router iterations in which the negotiated congestion mechanism is more sensitive to synchronization and connections have to be routed one after the other or only connections in other locations can be routed concurrently~\cite{gort2010deterministic}
+A finer grained approach is parallelizing the A*-search in itself. The wavefront is expanded by different threads. A fixed number of nodes are popped from the priority queue and each thread processes the node separately. Each thread checks if the target is reached and if not the cost of the neighbouring nodes is calculated and added to the priority queue in a similar way as done in~\cite{Merrill2015}. The wavefront of an A*-search is typically directed towards the goal and so it only makes sense to expand a limited amount of nodes at a time, so we suggest to use the maximum number of threads in one warp, this is typically 32. This finer grained approach could be applied in the later router iterations in which the negotiated congestion mechanism is more sensitive to synchronization and connections have to be routed one after the other or only connections in other locations can be routed concurrently~\cite{gort2010deterministic}.
 
 \paragraph{Tile based Compression of the Routing Resource Graph}
-The routing resource graph (RRG) is actually built up of stitched instances of a few of regular tiles. An expanded RRG can easily surpass today's workstation memory capacities \cite{murray2015timing}. It is important the routing resource graph fits in the GPU memory banks.
+The routing resource graph (RRG) is actually built up of stitched instances of a few regular tiles. An expanded RRG can easily surpass today's workstation memory capacities \cite{murray2015timing}. It is important the routing resource graph fits in the GPU memory banks.
 An FPGA consists of a grid of logic blocks interspersed with columns of memory blocks and DSP blocks. The interconnection fabric surrounding each type of block is typically adapted to the size and the number of I/O of the block. For each tile type a template RRG tile can be kept in the shared memory of the router threads. It is constant and read-only.
 Tile-based compression of the RRG has been attempted in the past \cite{chin2007memory}, but was only evaluated in a single thread implementation on a CPU.
 
@@ -318,27 +320,29 @@ testing, reporting, chapter and thesis writing, and thesis submission date.}
 
 The research in this project will be divided in 2 big stages:
 
-\subsection{Work Packages}
+%\subsection{Work Packages}
 \begin{description*}
-\item[Hardware Acceleration of the placement (20 months)]\
+\item[Hardware Acceleration of the placement (24 months)]\ %(20 months)]\
 
 \begin{description*}
-\item[Adapt the liquid placement algorithm for wide-scale parallelization (9+1 months)]\
+\item[Adapt the {\sc Liquid} placement algorithm for wide-scale parallelization (9+1 months)]\
 In the first step the placer prototype will be further developed and elaborated with the features that were described in the previous section. After this work there is one month allocated for writing a conference paper to report about the initial results.
 \item[Implementation of GPU Accelerator for Placement (9+1 months)]\
 \\After developing the placement algorithm, it will be implemented on the GPU. Measurements and results will be reported in another conference paper and a demonstration will be held at one of the workshops accompanying a conference. 
+\item[Explore the concurrent execution of timing analysis (3+1 months)]\
+While the GPU implementation is calculating the moves, the timing analysis can be performed concurrently on the CPU. If this does not degrade the quality of the result, we will also publish a paper on this. In the other case, we will try to accelerate timing analysis on the GPU as well.
 \end{description*}
 
-\item[Hardware Acceleration of the the routing (17 months)]\
+\item[Hardware Acceleration of the routing (18 months)]\
 
 \begin{description*}
-\item[Exploration new routing algorithms for wide-scale parallelization (8 months)] 
+\item[Exploration of new routing algorithms for wide-scale parallelization (8+1 months)] 
 Exploring different routing algorithms and devising new algorithms with wide-scale parallelisation in mind. After exploration, the prototype will be implemented and tested. The results will be reported in a conference publication.
-\item[Implementation of GPU/FPGA accelerator for Routing (9+1 months)]
+\item[Implementation of GPU/FPGA accelerator for Routing (8+1 months)]
 After developing the routing algorithm, it will be implemented on the GPU/FPGA. Measurements and results will be reported in another conference paper and a demonstration will be held at one of the workshops accompanying a conference. 
 \end{description*}
 
-\item[Writing the doctoral thesis and reporting final results. (6 months)] This time is allocated to write the thesis and to report the finalized results in journals and conferences.  
+\item[Writing the doctoral thesis and reporting final results (6 months)] This time is allocated to write the thesis and to report the finalized results in journals and conferences.  
 
 \end{description*}
 
@@ -355,13 +359,15 @@ What do you expect it will deliver?
 What are the expected outcomes? 
 Establish the importance of your project by highlighting its originality or why it is worth pursuing. Highlight the benefits, positive expected outcomes or innovative applications of knowledge.}
 
-\hl{Dirk: I can probably write this part after the rest of the proposal is written.\\
-Elias: Maybe we can tell here that the first stage is less risk and we are more confident that we will succeed here, because we already developed a good base algorithm that will be easier to parallelize, but for the second stage we did not yet devise a new algorithm. So the second stage has inherent more risk because we have yet to start research there.\\
-@Yun: Can you make/update the figure for the planning/timetable?}
+\hl{@Yun: Can you make/update the figure for the planning/timetable?}
 
+\subsection{Expected Outcomes}
+The acceleration of placement and routing tools by parallelization and implementation of the algorithms on GPU or FPGA hardware will significantly shorten the design cycle for FPGA designs. This enables a strong reduction of the FPGA design turnaround time and hence speeds up the optimization of FPGA designs. The results of this project will therefore benefit thousands of designers worldwide.
+
+Researchers have tried to parallelize placement and routing algorithms before but the benefits have not been tremendous because previous research has mainly focused on the simulated annealing based placers which are very difficult to parallelize. The prospects for parallelization of the analytical placement tool {\sc Liquid}, developed at Ghent University, are much better. Therefore, we are confident that we will succeed in obtaining very large speed-ups in the placement step (in part I of this research project). Although the reduction of time needed for placement alone already will prove significant, our goal is to go for the additional speedup of also parallelizing the routing step of the FPGA design cycle (part II of this research project). Although more challenging, we believe that the lessons learned from the parallelization of the placement step will help us in finding requirements for a new routing algorithm that is much better suited for parallelization. 
 
 \subsection{Context and Strategy}\label{context}
-My research will be conducted at Ghent University in the research group Hardware and Embedded Systems (HES). HES is part of the Computer Systems Lab (CSL) in the Department of Electronics and Information Systems. The HES group is lead by professor Dirk Stroobandt. The group has a lot of experience with developping FPGA CAD tool software.
+This research will be conducted at Ghent University in the research group Hardware and Embedded Systems (HES). HES is part of the Computer Systems Lab (CSL) in the Department of Electronics and Information Systems. The HES group is lead by professor Dirk Stroobandt. The group has a lot of experience with developping FPGA CAD tool software and has developed the {\sc Liquid} analytical placer. The group also has worked a lot on improving routing tools (mainly to extend them in the context of run-time reconfigurable routing). It is the strategy of the group to further its expertise in placement and routing algorithms, as well as exploit its knowledge on hardware implementations for accelerating algorithms. The group's extensive contacts with the major researchers in the field worldwide and its active presence at the most important FPGA design conferences will further feed this project with ideas and suggestions and will help to keep it focused on its goals.
 
 
 
