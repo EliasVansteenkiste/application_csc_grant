@@ -74,8 +74,7 @@
 \mbox{}\\\vspace{5mm}
 {\large Research Proposal Accompanying Application for CSC Grant}\\ [45mm]
 %
-{\bf\Large Hardware acceleration for FPGA CAD Tools:\\
-[3mm] Efficiently Parallelizing PAR onto a GPU/FPGA} \\
+{\bf\Large Hardware acceleration for FPGA Placement and Routing} \\
 \vspace{45mm}
 \large Applicant: Yun ZHOU \\
 \vspace{2mm}
@@ -316,12 +315,15 @@ Tile-based compression of the RRG has been attempted in the past \cite{chin2007m
 \section{\hl{Experimental Evaluation and} Expected Outcomes}
 
 All experiments will be conducted on a host machine with a dual socket, dual core 2.27 GHz processor and 4 GB of memory. A single NVIDIA GeForce 310M GPU will be used to run CUDA applications.
-Since the overall high level research goal is to investigate how much the PAR can be accelerated using the proposed solutions and to provide credible results, the performance of the proposed PAR technique will be evaluated and then quantitatively compared to that of the existing popular ones or the improved parallel ones that are performed on CPUs in terms of the runtime, total wire length and maximum circuit clock frequency targeting the same architecture and FPGA circuits. As stated in section \ref{sec:placeprob}, a mapped circuit involving a description of a specific FPGA architecture is necessary. We plan to adopt academic benchmark circuits and use the commercial tool Quartus II as a front-end to generate the mapped circuits, which will bring several advantages that are hard to replicate in open-source flows \cite{murray2015timing}.
+Since the overall high level research goal is to investigate how much the PAR can be accelerated using the proposed solutions and to provide credible results, the performance of the proposed PAR technique will be evaluated and then quantitatively compared to that of the existing popular ones or the improved parallel ones that are performed on CPUs in terms of the runtime, total wire length and maximum circuit clock frequency targeting the same architecture and FPGA circuits. As stated in section \ref{sec:placeprob}, a mapped circuit involving a description of a specific FPGA architecture is necessary. At the starting point, we plan to adopt academic benchmark circuits and use the commercial tool Quartus II as a front-end to generate the mapped circuits, which will bring several advantages that are hard to replicate in open-source flows \cite{murray2015timing}. 
 
 \paragraph{\hl{Benchmark Circuits}}
 The FPGA community relies heavily on benchmarks to evaluate performance of FPGA CAD tools, because benchmark circuits play a key role in the quantitative comparison of tools \cite{murray2015timing}. It is important that these benchmarks reflect modern large-scale systems that make use of heterogeneous resources.
 In the past, a challenge in evaluating PAR performance and quality of result is the lack of large academic circuits for FPGAs. Thus, to mitigate this problem and provide credible results, some researchers may adopted more than one set of benchmarks \cite{bian2010towards}. But now the large and complex benchmarks in academic CAD research, Titan23 benchmark suite targeting Altera's Stratix IV FPGA, is available online \cite{Titan23}.
 %Toronto 20 benchmark suite originated from an FPGA place-and-route challenge that was set up to encourage FPGA researchers to benchmark their software design tool chains on large circuits.
+
+\paragraph{\hl{FPGA Architecture}}
+Although the high-level goal is to develop generic PAR algorithms that are not only applicable to one particular FPGA architecture, at the starting point we tend to assume Altera's Stratix IV FPGA as the target taking the selection of benchmark circuits into consideration, sice the description of hardware architectures is indispensable for developing CAD tools. Now that the FPGA CAD tool development and FPGA architecture design are interactive tasks, if possible and time allows, we may explore an unified description for different FPGA architectures to further support the software development, which would definitely be another interesting research path.
 
 \paragraph{\hl{Possible Baseline CPU CAD Tools}}
 The possible references/baselines can be divided into two types. One is the advanced academic tool, such as VPR wire-length driven placer with default settings and the VPR breadth-first router, and the other can be a commercial one like Altera's Quartus II FPGA CAD software.
