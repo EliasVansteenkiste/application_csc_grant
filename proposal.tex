@@ -74,7 +74,8 @@
 \mbox{}\\\vspace{5mm}
 {\large Research Proposal Accompanying Application for CSC Grant}\\ [45mm]
 %
-{\bf\Large Hardware Acceleration for FPGA CAD Tools by Efficiently Parallelizing PAR onto GPU/FPGA} \\
+{\bf\Large Accelerating FPGA CAD Tools by Efficiently Parallelizing PAR onto GPU/FPGA} \\
+%{\bf\Large Hardware Acceleration for FPGA CAD Tools by Efficiently Parallelizing PAR onto GPU/FPGA} \\
 %[3mm] Concurrent Place and Route algorithms for Hardware Accelerators GPU/FPGA} \\
 \vspace{45mm}
 \large Applicant: Yun ZHOU \\
@@ -315,7 +316,7 @@ Tile-based compression of the RRG has been attempted in the past \cite{chin2007m
 
 \section{Experimental Evaluation and Expected Outcomes}
 
-All experiments will be conducted on a host machine with a dual socket, dual core 2.27 GHz processor and 4 GB of memory. A single NVIDIA GeForce 310M GPU will be used to run CUDA applications.
+All experiments will probably be conducted on a host machine with a dual socket, dual core 2.27 GHz processor and 4 GB of memory. A single NVIDIA GeForce 310M GPU will be used to run CUDA applications.
 Since the overall high level research goal is to investigate how much the PAR can be accelerated using the proposed solutions and to provide credible results, the performance of the proposed PAR technique will be evaluated and then quantitatively compared to that of the existing popular ones or the improved parallel ones that are performed on CPUs in terms of the runtime, total wire length and maximum circuit clock frequency targeting the same architecture and FPGA circuits. As stated in section \ref{sec:placeprob}, a mapped circuit involving a description of a specific FPGA architecture is necessary. We plan to adopt academic benchmark circuits and use the commercial tool Quartus II as a front-end to generate the mapped circuits, which will bring several advantages that are hard to replicate in open-source flows \cite{murray2015timing}.
 
 \paragraph{Benchmark Circuits}
