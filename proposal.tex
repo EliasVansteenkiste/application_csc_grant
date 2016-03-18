@@ -276,7 +276,7 @@ Instead, our idea is to keep the movement of the blocks independent and introduc
 
 \paragraph{Timing analysis}
 In a timing analysis the most critical connections are identified by traversing the timing graph. The connections determine the weights of the nets.
-In the current implementation of {\sc Liquid}, the timing analysis is done every 5 iterations instead of each optimize-legalise iteration, because the criticality of the nets doesn't change extremely between iterations.
+In the current implementation of {\sc Liquid}, a timing analysis is done every 5 iterations instead of each optimize-legalise iteration, because the criticality of the nets doesn't change extremely between iterations.
 So there is an option to do timing analysis on the CPUs concurrently, while the moves are being performed by the GPUs, but it will be the subject of research if this will degrade the quality of result of the final placement.
 Another research path will be to also adapt timing analysis to be able to run it on the GPU. This will involve accelerating breadth-first search, because that is one of the main components of timing analysis. This is not straightforward because it involves graph traversal and pointer chasing, but Merrill et al. showed significant speedups in \cite{Merrill2015}.
 
